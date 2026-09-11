@@ -1,93 +1,79 @@
 {% extends 'base.html' %}
-{% block title %}Signals — MK Sniper Bot{% endblock %}
+{% block title %}Signal Engine — MK Sniper Bot{% endblock %}
 
 {% block content %}
+<style>
+    .step-section { transition: all 0.4s ease-out; opacity: 1; transform: scale(1); }
+    .step-hidden { opacity: 0; transform: scale(0.9); pointer-events: none; position: absolute; visibility: hidden; }
+    
+    .hacker-text { font-family: monospace; color: var(--accent-green); white-space: pre-wrap; font-size: 0.9rem; line-height: 1.5; }
+    .blinking-cursor { animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+</style>
+
 <div class="main-content">
-    <div class="container">
-        <div class="dashboard-header">
+    <div class="container" style="max-width: 800px;">
+        
+        <div class="dashboard-header mb-4">
             <div>
-                <h1>🎯 Signal Generator</h1>
-                <p class="welcome-text">Select market, asset, and duration to generate a precision signal.</p>
+                <h1>🎯 Sniper Engine</h1>
+                <p class="welcome-text">Follow the sequence to generate a precision entry.</p>
             </div>
-            <span class="live-indicator">
-                <span class="live-dot"></span>
-                ENGINE ACTIVE
-            </span>
+            <span class="live-indicator"><span class="live-dot"></span> CONNECTED</span>
         </div>
 
         {% if not has_access %}
-        <!-- Locked State -->
-        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+        <div class="card text-center" style="padding: 4rem 2rem;">
             <span style="font-size: 4rem;">🔒</span>
-            <h2 class="mt-2">Subscription Required</h2>
-            <p style="color: var(--text-muted); margin: 1rem 0 2rem;">
-                {% if trial_remaining > 0 %}
-                You have <b>{{ trial_remaining }}</b> free trial signal(s) remaining.
-                {% else %}
-                Your free trial has ended. Subscribe to continue receiving signals.
-                {% endif %}
-            </p>
-            <div class="d-flex justify-center gap-2 flex-wrap" style="justify-content: center;">
-                <a href="{{ url_for('subscribe_page') }}" class="btn btn-primary btn-lg">💎 Subscribe Now</a>
-                <a href="https://t.me/{{ admin_username.replace('@','') }}" target="_blank" class="btn btn-secondary btn-lg">📱 Contact Admin</a>
-            </div>
-
-            {% if has_key_input %}
-            <div class="auth-divider mt-4">or enter your access key</div>
-            <form method="POST" action="{{ url_for('redeem_key') }}" style="max-width: 400px; margin: 0 auto;">
-                <div class="form-group">
-                    <input type="text" name="access_key" class="form-control" placeholder="Enter your access key" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">🔑 Activate Key</button>
-            </form>
-            {% endif %}
+            <h2 class="mt-2">Access Locked</h2>
+            <p style="color: var(--text-muted); margin: 1rem 0 2rem;">Subscription required to fire the engine.</p>
+            <a href="{{ url_for('subscribe_page') }}" class="btn btn-primary btn-lg">💎 Unlock Access</a>
         </div>
-
         {% else %}
-        <!-- Signal Generation Interface -->
-        <div class="stats-grid">
-            <!-- Market Selection -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">🌍 Select Market</span>
-                </div>
-                <div class="d-flex flex-wrap gap-1">
-                    <button class="btn btn-secondary market-btn" data-market="otc" onclick="selectMarket('otc')">🌙 OTC</button>
-                    <button class="btn btn-secondary market-btn" data-market="forex" onclick="selectMarket('forex')">💱 Forex</button>
-                    <button class="btn btn-secondary market-btn" data-market="crypto" onclick="selectMarket('crypto')">₿ Crypto</button>
-                </div>
-            </div>
 
-            <!-- Duration Selection -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">⏱ Select Duration</span>
-                </div>
-                <div class="d-flex flex-wrap gap-1">
-                    {% for key, dur in durations.items() %}
-                    <button class="btn btn-secondary dur-btn" data-dur="{{ key }}" onclick="selectDuration('{{ key }}')">{{ dur.label }}</button>
-                    {% endfor %}
-                </div>
+        <!-- STEP 1: MARKET -->
+        <div id="step-1" class="step-section card">
+            <h3 class="mb-3">Step 1: Select Market Feed</h3>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-secondary flex-1" onclick="selectMarket('otc')">🌙 OTC Markets</button>
+                <button class="btn btn-secondary flex-1" onclick="selectMarket('forex')">💱 Live Forex</button>
+                <button class="btn btn-secondary flex-1" onclick="selectMarket('crypto')">₿ Crypto</button>
             </div>
         </div>
 
-        <!-- Pair Selection -->
-        <div class="card mt-2" id="pairs-section" style="display: none;">
-            <div class="card-header">
-                <span class="card-title">📍 Select Asset</span>
-                <span id="pairs-count" class="badge badge-info">0 pairs</span>
+        <!-- STEP 2: DURATION -->
+        <div id="step-2" class="step-section step-hidden card">
+            <div class="d-flex justify-between align-center mb-3">
+                <h3>Step 2: Timeframe</h3>
+                <button class="btn btn-sm btn-secondary" onclick="resetEngine()">« Back</button>
             </div>
-            <div id="pairs-grid" class="d-flex flex-wrap gap-1"></div>
+            <div class="d-flex flex-wrap gap-1">
+                {% for key, dur in durations.items() %}
+                <button class="btn btn-secondary" style="flex: 1 1 20%;" onclick="selectDuration('{{ key }}')">{{ dur.label }}</button>
+                {% endfor %}
+            </div>
         </div>
 
-        <!-- Signal Output -->
-        <div class="card mt-2" id="signal-output" style="display: none;">
-            <div class="card-header">
-                <span class="card-title">⚡ Signal Analysis</span>
-                <div class="loading-spinner" id="signal-spinner"></div>
+        <!-- STEP 3: PAIR -->
+        <div id="step-3" class="step-section step-hidden card">
+            <div class="d-flex justify-between align-center mb-3">
+                <h3>Step 3: Target Asset</h3>
+                <button class="btn btn-sm btn-secondary" onclick="resetEngine()">« Back</button>
             </div>
+            <div id="pairs-grid" class="d-flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- STEP 4: ANALYZING -->
+        <div id="step-4" class="step-section step-hidden card" style="min-height: 250px; display: flex; flex-direction: column; justify-content: center;">
+            <div class="hacker-text" id="hacker-console"></div>
+        </div>
+
+        <!-- STEP 5: RESULT -->
+        <div id="step-5" class="step-section step-hidden">
             <div id="signal-result"></div>
+            <button class="btn btn-secondary btn-block mt-3" onclick="resetEngine()">🔄 Fire Another Signal</button>
         </div>
+
         {% endif %}
     </div>
 </div>
@@ -95,120 +81,119 @@
 
 {% block scripts %}
 <script>
-let selectedMarket = null;
-let selectedDuration = null;
-let selectedPair = null;
 const pairsData = {{ pairs_json|safe }};
+let state = { market: null, duration: null, pair: null };
 
-function selectMarket(market) {
-    selectedMarket = market;
-    document.querySelectorAll('.market-btn').forEach(b => b.classList.remove('btn-primary'));
-    document.querySelector(`[data-market="${market}"]`).classList.add('btn-primary');
-    document.querySelector(`[data-market="${market}"]`).classList.remove('btn-secondary');
+function hideAll() {
+    [1,2,3,4,5].forEach(i => document.getElementById(`step-${i}`).classList.add('step-hidden'));
+}
 
-    const section = document.getElementById('pairs-section');
+function selectMarket(mkt) {
+    state.market = mkt;
     const grid = document.getElementById('pairs-grid');
-    section.style.display = 'block';
-
-    const filtered = Object.entries(pairsData).filter(([k, v]) => v.type === market);
-    document.getElementById('pairs-count').textContent = `${filtered.length} pairs`;
-
+    const filtered = Object.entries(pairsData).filter(([k, v]) => v.type === mkt);
+    
     grid.innerHTML = filtered.map(([name, info]) => `
-        <button class="btn btn-secondary pair-btn" data-pair="${name}" onclick="selectPair('${name}')">
-            ${name} <small style="color: var(--accent-green)">${info.payout}%</small>
+        <button class="btn btn-secondary" style="flex: 1 1 30%;" onclick="selectPair('${name}')">
+            ${name} <span style="color:var(--accent-green); font-size:0.75rem; margin-left:4px;">${info.payout}%</span>
         </button>
     `).join('');
+
+    hideAll();
+    document.getElementById('step-2').classList.remove('step-hidden');
 }
 
 function selectDuration(dur) {
-    selectedDuration = dur;
-    document.querySelectorAll('.dur-btn').forEach(b => {
-        b.classList.remove('btn-primary');
-        b.classList.add('btn-secondary');
-    });
-    const btn = document.querySelector(`[data-dur="${dur}"]`);
-    btn.classList.add('btn-primary');
-    btn.classList.remove('btn-secondary');
+    state.duration = dur;
+    hideAll();
+    document.getElementById('step-3').classList.remove('step-hidden');
 }
 
-async function selectPair(pair) {
-    selectedPair = pair;
-    document.querySelectorAll('.pair-btn').forEach(b => {
-        b.classList.remove('btn-primary');
-        b.classList.add('btn-secondary');
-    });
-    document.querySelector(`[data-pair="${pair}"]`).classList.add('btn-primary');
-    document.querySelector(`[data-pair="${pair}"]`).classList.remove('btn-secondary');
+function selectPair(pair) {
+    state.pair = pair;
+    hideAll();
+    document.getElementById('step-4').classList.remove('step-hidden');
+    runHackerAnimation();
+}
 
-    if (!selectedDuration) {
-        showToast('Please select a duration first', 'warning');
-        return;
+async function runHackerAnimation() {
+    const consoleEl = document.getElementById('hacker-console');
+    const logs = [
+        `> CONNECTING TO ${state.market.toUpperCase()} NODE...`,
+        `> ISOLATING ${state.pair} DATASTREAM...`,
+        `> ALIGNING DURATION REGIME [${state.duration}]...`,
+        "> SCANNING WAVE STRUCTURES...",
+        "> CALCULATING PROBABILITY MATRIX...",
+        "> SIGNAL LOCK ACQUIRED."
+    ];
+
+    consoleEl.innerHTML = "";
+    for(let i=0; i<logs.length; i++) {
+        consoleEl.innerHTML += logs[i] + "<br>";
+        await new Promise(r => setTimeout(r, 400 + Math.random()*400));
     }
+    
+    fetchSignalWithRetry();
+}
 
-    const output = document.getElementById('signal-output');
-    const result = document.getElementById('signal-result');
-    const spinner = document.getElementById('signal-spinner');
-    output.style.display = 'block';
-    spinner.style.display = 'block';
-    result.innerHTML = '<p style="color: var(--text-muted);">Analyzing market structure...</p>';
-
+async function fetchSignalWithRetry(retries = 3) {
     try {
         const res = await fetch('/api/generate-signal', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({pair: selectedPair, duration: selectedDuration})
+            body: JSON.stringify({pair: state.pair, duration: state.duration})
         });
         const data = await res.json();
-        spinner.style.display = 'none';
+        
+        if(data.success) renderSignal(data.signal);
+        else throw new Error(data.error);
 
-        if (data.success) {
-            const s = data.signal;
-            const dirClass = s.direction === 'CALL' ? 'call' : 'put';
-            const dirIcon = s.direction === 'CALL' ? '🟢 CALL ⬆️' : '🔴 PUT ⬇️';
-            result.innerHTML = `
-                <div class="signal-card ${dirClass}" style="margin: 0; animation: scaleIn 0.5s ease-out;">
-                    <div class="signal-pair">
-                        <h3>${s.pair}</h3>
-                        <span class="signal-direction ${dirClass}">${dirIcon}</span>
-                    </div>
-                    <div class="signal-details">
-                        <div class="signal-detail">
-                            <span class="label">Duration</span>
-                            <span class="value">${s.duration}</span>
-                        </div>
-                        <div class="signal-detail">
-                            <span class="label">Entry Time</span>
-                            <span class="value">${s.entry_time}</span>
-                        </div>
-                        <div class="signal-detail">
-                            <span class="label">MG1 Support</span>
-                            <span class="value">${s.mg_time}</span>
-                        </div>
-                        <div class="signal-detail">
-                            <span class="label">Payout</span>
-                            <span class="value">${s.payout}%</span>
-                        </div>
-                    </div>
-                    <div class="signal-accuracy">
-                        <div class="accuracy-bar">
-                            <div class="accuracy-fill" style="width: ${s.accuracy}%"></div>
-                        </div>
-                        <span class="accuracy-text">${s.accuracy}%</span>
-                    </div>
-                    <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Confluence Filters:</p>
-                        ${s.confluences.map(c => `<p style="font-size: 0.85rem; color: var(--text-secondary);">• ${c}</p>`).join('')}
-                    </div>
-                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--accent-yellow);">⚠️ Execute exactly at the Entry Time for a secure First-Entry win.</p>
-                </div>
-            `;
+    } catch (e) {
+        if(retries > 0) {
+            document.getElementById('hacker-console').innerHTML += `<br><span style="color:var(--accent-yellow)">> CONNECTION FLUCTUATION... RETRYING...</span>`;
+            setTimeout(() => fetchSignalWithRetry(retries - 1), 1000);
         } else {
-            result.innerHTML = `<p style="color: var(--accent-red);">❌ ${data.error}</p>`;
+            document.getElementById('hacker-console').innerHTML += `<br><span style="color:var(--accent-red)">> FATAL ERROR: ${e.message}. REBOOT ENGINE.</span>`;
+            setTimeout(resetEngine, 3000);
         }
-    } catch(e) {
-        spinner.style.display = 'none';
-        result.innerHTML = '<p style="color: var(--accent-red);">❌ Network error. Please try again.</p>';
     }
+}
+
+function renderSignal(s) {
+    hideAll();
+    document.getElementById('step-5').classList.remove('step-hidden');
+    
+    const dirClass = s.direction === 'CALL' ? 'call' : 'put';
+    const icon = s.direction === 'CALL' ? '🟢 CALL ⬆️' : '🔴 PUT ⬇️';
+    
+    document.getElementById('signal-result').innerHTML = `
+        <div class="signal-card ${dirClass}" style="margin: 0; box-shadow: var(--shadow-glow);">
+            <div class="signal-pair">
+                <h3>${s.pair}</h3>
+                <span class="signal-direction ${dirClass}">${icon}</span>
+            </div>
+            <div class="signal-details">
+                <div class="signal-detail"><span class="label">Duration</span><span class="value">${s.duration}</span></div>
+                <div class="signal-detail"><span class="label">Entry Time</span><span class="value">${s.entry_time}</span></div>
+                <div class="signal-detail"><span class="label">MG1 Support</span><span class="value">${s.mg_time}</span></div>
+                <div class="signal-detail"><span class="label">Payout</span><span class="value">${s.payout}%</span></div>
+            </div>
+            <div class="signal-accuracy mt-2">
+                <div class="accuracy-bar"><div class="accuracy-fill" style="width: ${s.accuracy}%"></div></div>
+                <span class="accuracy-text">${s.accuracy}%</span>
+            </div>
+            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform:uppercase;">Confluence Data:</p>
+                ${s.confluences.map(c => `<p style="font-size: 0.85rem; color: var(--text-secondary);">• ${c}</p>`).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function resetEngine() {
+    state = { market: null, duration: null, pair: null };
+    hideAll();
+    document.getElementById('step-1').classList.remove('step-hidden');
 }
 </script>
 {% endblock %}
