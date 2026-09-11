@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 MK SNIPER BOT v47.0 — Complete Full-Stack Application
-Flask Web Dashboard + Telegram Bot + Admin Panel + Payment System
 """
+
+# MUST be first — eventlet monkey patch before anything else
+import eventlet
+eventlet.monkey_patch()
 
 import asyncio
 import aiohttp
@@ -21,6 +24,7 @@ from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Any
 from functools import wraps
+# ... rest of your imports
 
 # Flask imports
 from flask import (
