@@ -5,11 +5,12 @@
 <div class="main-content">
     <div class="container">
         <h1 class="text-center mb-2" style="font-size: 2.2rem; font-weight: 900;">💎 Subscription Plans</h1>
-        <p class="text-center mb-4" style="color: var(--text-muted); max-width: 600px; margin-left: auto; margin-right: auto;">
+        <p class="text-center mb-4" style="color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem;">
             Choose your plan and unlock unlimited precision trading signals across all markets.
         </p>
 
         <div class="plans-grid">
+            <!-- WEEKLY -->
             <div class="plan-card">
                 <div class="plan-name">Weekly</div>
                 <div class="plan-price">$20</div>
@@ -21,9 +22,10 @@
                     <li>Telegram bot access</li>
                     <li>Email support</li>
                 </ul>
-                <button class="btn btn-secondary btn-block" onclick="showPayment('week', '$20')">Select Plan</button>
+                <button class="btn btn-secondary btn-block" onclick="showPayment('week', '$20', 'Weekly Plan')">Select Plan</button>
             </div>
 
+            <!-- MONTHLY -->
             <div class="plan-card featured">
                 <div class="plan-name">Monthly</div>
                 <div class="plan-price">$100</div>
@@ -37,9 +39,10 @@
                     <li>Strategy videos</li>
                     <li>Market analysis</li>
                 </ul>
-                <button class="btn btn-primary btn-block" onclick="showPayment('month', '$100')">Select Plan</button>
+                <button class="btn btn-primary btn-block" onclick="showPayment('month', '$100', 'Monthly Plan')">Select Plan</button>
             </div>
 
+            <!-- LIFETIME -->
             <div class="plan-card">
                 <div class="plan-name">Lifetime</div>
                 <div class="plan-price">$150</div>
@@ -54,12 +57,12 @@
                     <li>All future updates</li>
                     <li>Exclusive indicators</li>
                 </ul>
-                <button class="btn btn-purple btn-block" onclick="showPayment('lifetime', '$150')">Select Plan</button>
+                <button class="btn btn-purple btn-block" onclick="showPayment('lifetime', '$150', 'Lifetime Plan')">Select Plan</button>
             </div>
         </div>
 
-        <!-- Access Key Redemption -->
-        <div class="card mt-4" style="max-width: 500px; margin-left: auto; margin-right: auto;">
+        <!-- ACCESS KEY -->
+        <div class="card mt-4" style="max-width: 500px; margin: 2rem auto 0;">
             <div class="card-header">
                 <span class="card-title">🔑 Have an Access Key?</span>
             </div>
@@ -73,12 +76,12 @@
     </div>
 </div>
 
-<!-- Payment Modal -->
+<!-- PAYMENT MODAL -->
 <div class="modal-overlay" id="payment-modal">
     <div class="modal">
         <div class="modal-header">
             <h3>💳 Payment Instructions</h3>
-            <button class="modal-close" onclick="closeModal(document.getElementById('payment-modal'))">×</button>
+            <button class="modal-close" onclick="document.getElementById('payment-modal').classList.remove('active')">×</button>
         </div>
         <div style="text-align: center; margin-bottom: 1.5rem;">
             <p style="font-size: 1.5rem; font-weight: 800; color: var(--accent-green);" id="modal-plan-price">$100</p>
@@ -94,9 +97,9 @@
         <div style="background: rgba(249,115,22,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
             <p style="font-size: 0.9rem; color: var(--accent-orange);">
                 <b>⚠️ After sending payment:</b><br>
-                1. Take a screenshot of your transaction<br>
+                1. Screenshot your transaction<br>
                 2. Send it to <b>{{ admin_username }}</b> on Telegram<br>
-                3. Include your User ID: <code>{{ current_user.id if current_user.is_authenticated else 'Register first' }}</code><br>
+                3. Include your User ID: <code>{{ current_user.id if current_user.is_authenticated else 'Login first' }}</code><br>
                 4. Admin will send you an activation key
             </p>
         </div>
@@ -109,10 +112,9 @@
 
 {% block scripts %}
 <script>
-function showPayment(plan, price) {
-    const names = {week: 'Weekly Plan', month: 'Monthly Plan', lifetime: 'Lifetime Plan'};
+function showPayment(plan, price, name) {
     document.getElementById('modal-plan-price').textContent = price;
-    document.getElementById('modal-plan-name').textContent = names[plan] || plan;
+    document.getElementById('modal-plan-name').textContent = name;
     document.getElementById('payment-modal').classList.add('active');
 }
 </script>
