@@ -1622,10 +1622,12 @@ def run_telegram_bot():
 
 # ==================== APPLICATION STARTUP ====================
 def create_admin_user():
-    """Ensure admin user exists"""
+    """Ensure admin exists and password matches env ADMIN_PASSWORD"""
+    pw = os.environ.get("ADMIN_PASSWORD", "admin123secure")
+    pw_hash = bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
     admin = get_user_by_username("admin")
+
     if not admin:
-        pw_hash = bcrypt.hashpw(ADMIN_PASSWORD.encode(), bcrypt.gensalt()).decode()
         admin = WebUser(
             id=str(ADMIN_ID),
             username="admin",
@@ -1637,6 +1639,11 @@ def create_admin_user():
         )
         save_user(admin)
         log.info("Admin user created")
+    else:
+        # keep admin privileges in sync
+        if not admin.is_admin:
+            admin.is_admin = True
+            save_user(admin)
 
 
 # Create admin on startup
