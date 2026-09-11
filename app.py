@@ -523,7 +523,7 @@ flask_app = Flask(__name__)
 flask_app.config["SECRET_KEY"] = SECRET_KEY
 flask_app.config["ADMIN_USERNAME"] = ADMIN_USERNAME
 
-socketio = SocketIO(flask_app, cors_allowed_origins="*", async_mode="eventlet")
+socketio = SocketIO(flask_app, cors_allowed_origins="*", async_mode="threading")
 
 login_manager = LoginManager()
 login_manager.init_app(flask_app)
@@ -1651,4 +1651,4 @@ print(f"  Admin: admin / {ADMIN_PASSWORD}")
 print("=" * 60)
 
 if __name__ == "__main__":
-    socketio.run(flask_app, host="0.0.0.0", port=PORT, debug=False)
+    socketio.run(flask_app, host="0.0.0.0", port=PORT, debug=False, allow_unsafe_werkzeug=True)
