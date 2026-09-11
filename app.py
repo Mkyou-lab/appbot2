@@ -189,32 +189,7 @@ def get_user_by_login(login_input: str) -> Optional[WebUser]:
             return u
     return None
 
-# ==================== ADMIN CREATION (FORCE SYNC) ====================
 def create_admin_user():
-    """Forces the admin account to match current env vars on every boot to prevent lockouts"""
-    pw_hash = bcrypt.hashpw(ADMIN_PASSWORD.encode(), bcrypt.gensalt()).decode()
-    admin = get_user_by_login("admin") or get_user_by_login(ADMIN_EMAIL)
-    
-    if not admin:
-        admin = WebUser(
-            id=str(ADMIN_ID),
-            username="admin",
-            fullname="Admin",
-            email=ADMIN_EMAIL,
-            password_hash=pw_hash,
-            is_admin=True,
-            plan="lifetime"
-        )
-    else:
-        # Force update admin password and email if they changed
-        admin.password_hash = pw_hash
-        admin.email = ADMIN_EMAIL
-        admin.is_admin = True
-        admin.plan = "lifetime"
-        
-    save_user(admin)
-    log.info(f"Admin synced: Username: admin | Email: {ADMIN_EMAIL}")
-
 # ==================== FLASK APP INIT ====================
 flask_app = Flask(__name__)
 flask_app.config["SECRET_KEY"] = SECRET_KEY
