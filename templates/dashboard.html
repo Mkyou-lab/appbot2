@@ -5,144 +5,52 @@
 <div class="main-content">
     <div class="container">
         <!-- Header -->
-        <div class="dashboard-header">
+        <div class="dashboard-header mb-4">
             <div>
                 <h1>Welcome, <span style="color: var(--accent-green)">{{ current_user.fullname }}</span> 👋</h1>
-                <p class="welcome-text">Your adaptive trading engine is active and monitoring markets.</p>
+                <p class="welcome-text">Your Telegram ID: <code style="color: var(--accent-blue)">{{ current_user.telegram_id or 'Not Linked' }}</code></p>
             </div>
             <div class="d-flex align-center gap-2">
-                <span class="live-indicator">
-                    <span class="live-dot"></span>
-                    LIVE
-                </span>
-                <span id="live-clock" style="font-family: monospace; font-size: 1.1rem; color: var(--accent-green);"></span>
+                <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
             </div>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card green">
-                <div class="card-icon green">🎯</div>
-                <div class="stat-info">
-                    <div class="stat-label">Win Rate</div>
-                    <div class="stat-value green">{{ "%.1f"|format(win_rate) }}%</div>
-                    <div class="stat-change up">▲ Trending up</div>
-                </div>
-            </div>
-            <div class="stat-card blue">
-                <div class="card-icon blue">📊</div>
-                <div class="stat-info">
-                    <div class="stat-label">Total Trades</div>
-                    <div class="stat-value blue">{{ total_trades }}</div>
-                </div>
-            </div>
-            <div class="stat-card purple">
-                <div class="card-icon purple">💰</div>
-                <div class="stat-info">
-                    <div class="stat-label">Net Profit</div>
-                    <div class="stat-value purple">${{ "%.2f"|format(pnl) }}</div>
-                </div>
-            </div>
+        <div class="stats-grid mb-4">
             <div class="stat-card pink">
                 <div class="card-icon pink">💎</div>
                 <div class="stat-info">
                     <div class="stat-label">Subscription</div>
                     <div class="stat-value pink">{{ sub_status }}</div>
-                    {% if sub_days %}
-                    <div class="stat-change">{{ sub_days }} days left</div>
-                    {% endif %}
+                    {% if sub_days %}<div class="stat-change">{{ sub_days }} days left</div>{% endif %}
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="card-icon green">🎯</div>
+                <div class="stat-info">
+                    <div class="stat-label">Web + Telegram</div>
+                    <div class="stat-value green">SYNCED</div>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="stats-grid mb-4">
-            <a href="{{ url_for('signals_page') }}" class="card" style="text-decoration: none;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2rem;">🎯</span>
-                    <div>
-                        <h3 style="color: var(--text-primary);">Get Trading Signal</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;">Generate a new precision signal</p>
-                    </div>
-                </div>
-            </a>
-            <a href="{{ url_for('subscribe_page') }}" class="card" style="text-decoration: none;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2rem;">💳</span>
-                    <div>
-                        <h3 style="color: var(--text-primary);">Upgrade Plan</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;">Unlock unlimited signals</p>
-                    </div>
-                </div>
-            </a>
-            <a href="https://t.me/MKSniperBot" target="_blank" class="card" style="text-decoration: none;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2rem;">📱</span>
-                    <div>
-                        <h3 style="color: var(--text-primary);">Telegram Bot</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;">Trade from Telegram</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Chart Area -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <span class="card-title">📈 Market Overview</span>
-                <span class="badge badge-success">LIVE</span>
-            </div>
-            <div class="chart-container">
-                <canvas class="mini-chart" width="800" height="250"></canvas>
-            </div>
-        </div>
-
-        <!-- Recent Signals -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">📋 Recent Signals</span>
-            </div>
-            <div id="signals-list" class="signals-container">
-                {% for signal in recent_signals %}
-                <div class="signal-card {{ signal.direction|lower }}">
-                    <div class="signal-pair">
-                        <h3>{{ signal.pair }}</h3>
-                        <span class="signal-direction {{ signal.direction|lower }}">
-                            {{ '🟢' if signal.direction == 'CALL' else '🔴' }} {{ signal.direction }}
-                        </span>
-                    </div>
-                    <div class="signal-details">
-                        <div class="signal-detail">
-                            <span class="label">Duration</span>
-                            <span class="value">{{ signal.duration }}</span>
-                        </div>
-                        <div class="signal-detail">
-                            <span class="label">Accuracy</span>
-                            <span class="value" style="color: var(--accent-green)">{{ signal.accuracy }}%</span>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No signals yet. Generate your first signal!</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Content Section -->
+        <!-- Strategy & Video Content -->
         {% if content_items %}
-        <div class="card mt-4">
-            <div class="card-header">
-                <span class="card-title">🎓 Strategy & Videos</span>
-            </div>
+        <div class="card mb-4">
+            <div class="card-header"><span class="card-title">🎓 Education & Strategy</span></div>
             <div class="content-grid">
                 {% for item in content_items %}
                 <div class="content-card">
-                    <div class="content-thumbnail">
-                        {% if item.type == 'video' %}
-                        <div class="play-overlay">▶</div>
-                        {% endif %}
-                        <span>{{ '🎬' if item.type == 'video' else '📄' }}</span>
-                    </div>
+                    {% if item.url %}
+                        <div class="content-thumbnail" style="padding:0; background: #000;">
+                            {% if '.mp4' in item.url %}
+                                <video src="{{ item.url }}" controls style="width:100%; height:100%;"></video>
+                            {% else %}
+                                <iframe src="{{ item.url }}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="content-thumbnail">📄</div>
+                    {% endif %}
                     <div class="content-body">
                         <h3>{{ item.title }}</h3>
                         <p>{{ item.description }}</p>
@@ -152,6 +60,22 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="stats-grid mb-4">
+            <a href="{{ url_for('signals_page') }}" class="card" style="text-decoration: none;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2rem;">🎯</span>
+                    <div><h3 style="color: var(--text-primary);">Sniper Engine</h3><p style="color: var(--text-muted); font-size: 0.85rem;">Generate a signal</p></div>
+                </div>
+            </a>
+            <a href="https://t.me/{{ config.get('ADMIN_USERNAME','').replace('@','') }}" target="_blank" class="card" style="text-decoration: none;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2rem;">📱</span>
+                    <div><h3 style="color: var(--text-primary);">Telegram Support</h3><p style="color: var(--text-muted); font-size: 0.85rem;">Contact Admin</p></div>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
