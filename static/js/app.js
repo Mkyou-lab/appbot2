@@ -66,18 +66,17 @@ function initAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animate-fade-in');
+                entry.target.classList.add('is-visible');
                 observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.1 });
+    }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
 
     document.querySelectorAll('.card, .stat-card, .plan-card, .feature-card, .signal-card, .content-card').forEach(el => {
-        el.style.opacity = '0';
+        el.classList.add('reveal');
         observer.observe(el);
     });
 }
-
 // ==================== COPY TO CLIPBOARD ====================
 function initCopyButtons() {
     document.querySelectorAll('.copy-text').forEach(el => {
