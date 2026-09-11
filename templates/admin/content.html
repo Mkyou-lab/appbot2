@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Content Management — Admin{% endblock %}
+
+{% block content %}
+<div class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h3>Admin Panel</h3>
+        <p>🛡 Command Center</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="{{ url_for('admin_panel') }}"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_users') }}"><span class="icon">👥</span> Users</a></li>
+        <li><a href="{{ url_for('admin_keys') }}"><span class="icon">🔑</span> Access Keys</a></li>
+        <li><a href="{{ url_for('admin_signals') }}"><span class="icon">🎯</span> Signals</a></li>
+        <li><a href="{{ url_for('admin_content') }}" class="active"><span class="icon">🎬</span> Content</a></li>
+        <li><a href="{{ url_for('admin_broadcast_page') }}"><span class="icon">📢</span> Broadcast</a></li>
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Back to Site</a></li>
+    </ul>
+</div>
+
+<div class="admin-content">
+    <div class="dashboard-header">
+        <h1>🎬 Content Management</h1>
+    </div>
+
+    <!-- Add Content Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <span class="card-title">➕ Add New Content</span>
+        </div>
+        <form method="POST" action="{{ url_for('admin_add_content') }}">
+            <div class="stats-grid">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="Content title" required>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select name="type" class="form-control">
+                        <option value="video">🎬 Video</option>
+                        <option value="strategy">📊 Strategy</option>
+                        <option value="guide">📖 Guide</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="3" placeholder="Describe the content..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Video URL / Embed Link (optional)</label>
+                <input type="text" name="url" class="form-control" placeholder="https://youtube.com/...">
+            </div>
+            <div class="form-group">
+                <label>Content Body (for strategies/guides)</label>
+                <textarea name="body" class="form-control" rows="6" placeholder="Write strategy details..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">✅ Add Content</button>
+        </form>
+    </div>
+
+    <!-- Existing Content -->
+    <div class="content-grid">
+        {% for item in content %}
+        <div class="content-card">
+            <div class="content-thumbnail">
+                <span>{{ '🎬' if item.type == 'video' else ('📊' if item.type == 'strategy' else '📖') }}</span>
+            </div>
+            <div class="content-body">
+                <div class="d-flex justify-between align-center mb-1">
+                    <h3>{{ item.title }}</h3>
+                    <button class="btn btn-danger btn-sm" onclick="deleteContent('{{ item.id }}')">🗑</button>
+                </div>
+                <span class="badge badge-info mb-1">{{ item.type }}</span>
+                <p>{{ item.description }}</p>
+            </div>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 3rem;">No content added yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

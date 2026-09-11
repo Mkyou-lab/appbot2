@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Broadcast — Admin{% endblock %}
+
+{% block content %}
+<div class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h3>Admin Panel</h3>
+        <p>🛡 Command Center</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="{{ url_for('admin_panel') }}"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_users') }}"><span class="icon">👥</span> Users</a></li>
+        <li><a href="{{ url_for('admin_keys') }}"><span class="icon">🔑</span> Access Keys</a></li>
+        <li><a href="{{ url_for('admin_signals') }}"><span class="icon">🎯</span> Signals</a></li>
+        <li><a href="{{ url_for('admin_content') }}"><span class="icon">🎬</span> Content</a></li>
+        <li><a href="{{ url_for('admin_broadcast_page') }}" class="active"><span class="icon">📢</span> Broadcast</a></li>
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Back to Site</a></li>
+    </ul>
+</div>
+
+<div class="admin-content">
+    <div class="dashboard-header">
+        <h1>📢 Broadcast Message</h1>
+    </div>
+
+    <div class="card" style="max-width: 700px;">
+        <div class="card-header">
+            <span class="card-title">Send to All Users</span>
+            <span class="badge badge-info">{{ total_users }} recipients</span>
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea id="broadcast-message" class="form-control" rows="6" placeholder="Type your broadcast message here..."></textarea>
+        </div>
+        <div class="d-flex gap-1">
+            <button class="btn btn-primary btn-lg" onclick="sendBroadcast()">📢 Send Broadcast</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('broadcast-message').value=''">Clear</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

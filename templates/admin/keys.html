@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Access Keys — Admin{% endblock %}
+
+{% block content %}
+<div class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h3>Admin Panel</h3>
+        <p>🛡 Command Center</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="{{ url_for('admin_panel') }}"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_users') }}"><span class="icon">👥</span> Users</a></li>
+        <li><a href="{{ url_for('admin_keys') }}" class="active"><span class="icon">🔑</span> Access Keys</a></li>
+        <li><a href="{{ url_for('admin_signals') }}"><span class="icon">🎯</span> Signals</a></li>
+        <li><a href="{{ url_for('admin_content') }}"><span class="icon">🎬</span> Content</a></li>
+        <li><a href="{{ url_for('admin_broadcast_page') }}"><span class="icon">📢</span> Broadcast</a></li>
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Back to Site</a></li>
+    </ul>
+</div>
+
+<div class="admin-content">
+    <div class="dashboard-header">
+        <h1>🔑 Access Key Management</h1>
+    </div>
+
+    <!-- Generate Keys -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <span class="card-title">Generate New Keys</span>
+        </div>
+        <div class="d-flex flex-wrap gap-1">
+            <button class="btn btn-primary" onclick="generateKey('week')">🔑 Weekly Key ($20)</button>
+            <button class="btn btn-primary" onclick="generateKey('month')">🔑 Monthly Key ($100)</button>
+            <button class="btn btn-purple" onclick="generateKey('lifetime')">🔑 Lifetime Key ($150)</button>
+        </div>
+    </div>
+
+    <!-- Keys Table -->
+    <div class="data-table-wrapper">
+        <table class="data-table" id="keys-table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Used By</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key in keys %}
+                <tr>
+                    <td>
+                        <div class="copy-text" data-copy="{{ key.key }}" style="display: inline-flex; padding: 4px 8px;">
+                            <code>{{ key.key }}</code> 📋
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if key.plan == 'lifetime' %}badge-purple{% elif key.plan == 'month' %}badge-success{% else %}badge-info{% endif %}">
+                            {{ key.plan|upper }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if key.used %}badge-danger{% else %}badge-success{% endif %}">
+                            {{ 'Used' if key.used else 'Available' }}
+                        </span>
+                    </td>
+                    <td>{{ key.used_by or '—' }}</td>
+                    <td>{{ key.created }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

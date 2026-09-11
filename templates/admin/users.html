@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}User Management — Admin{% endblock %}
+
+{% block content %}
+<div class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h3>Admin Panel</h3>
+        <p>🛡 Command Center</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="{{ url_for('admin_panel') }}"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_users') }}" class="active"><span class="icon">👥</span> Users</a></li>
+        <li><a href="{{ url_for('admin_keys') }}"><span class="icon">🔑</span> Access Keys</a></li>
+        <li><a href="{{ url_for('admin_signals') }}"><span class="icon">🎯</span> Signals</a></li>
+        <li><a href="{{ url_for('admin_content') }}"><span class="icon">🎬</span> Content</a></li>
+        <li><a href="{{ url_for('admin_broadcast_page') }}"><span class="icon">📢</span> Broadcast</a></li>
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Back to Site</a></li>
+    </ul>
+</div>
+
+<div class="admin-content">
+    <div class="dashboard-header">
+        <h1>👥 User Management</h1>
+        <span class="badge badge-info">{{ users|length }} users</span>
+    </div>
+
+    <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Telegram ID</th>
+                    <th>Plan</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><code>{{ user.id }}</code></td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.fullname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.telegram_id or '—' }}</td>
+                    <td>
+                        <span class="badge {% if user.plan == 'lifetime' %}badge-purple{% elif user.plan in ['week','month'] %}badge-success{% else %}badge-warning{% endif %}">
+                            {{ user.plan|upper }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if user.active %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ 'Active' if user.active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-primary btn-sm" onclick="activateUser('{{ user.id }}', 'week')">W</button>
+                            <button class="btn btn-primary btn-sm" onclick="activateUser('{{ user.id }}', 'month')">M</button>
+                            <button class="btn btn-purple btn-sm" onclick="activateUser('{{ user.id }}', 'lifetime')">L</button>
+                            <button class="btn btn-danger btn-sm" onclick="deactivateUser('{{ user.id }}')">✕</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

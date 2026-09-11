@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel — MK Sniper Bot{% endblock %}
+
+{% block content %}
+<div class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h3>Admin Panel</h3>
+        <p>🛡 Command Center</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="{{ url_for('admin_panel') }}" class="{% if request.endpoint == 'admin_panel' %}active{% endif %}"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_users') }}" class="{% if request.endpoint == 'admin_users' %}active{% endif %}"><span class="icon">👥</span> Users</a></li>
+        <li><a href="{{ url_for('admin_keys') }}" class="{% if request.endpoint == 'admin_keys' %}active{% endif %}"><span class="icon">🔑</span> Access Keys</a></li>
+        <li><a href="{{ url_for('admin_signals') }}" class="{% if request.endpoint == 'admin_signals' %}active{% endif %}"><span class="icon">🎯</span> Signals</a></li>
+        <li><a href="{{ url_for('admin_content') }}" class="{% if request.endpoint == 'admin_content' %}active{% endif %}"><span class="icon">🎬</span> Content</a></li>
+        <li><a href="{{ url_for('admin_broadcast_page') }}" class="{% if request.endpoint == 'admin_broadcast_page' %}active{% endif %}"><span class="icon">📢</span> Broadcast</a></li>
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Back to Site</a></li>
+    </ul>
+</div>
+
+<div class="admin-content">
+    <button class="mobile-toggle" id="sidebar-toggle" style="display: none; margin-bottom: 1rem;">☰ Menu</button>
+
+    <div class="dashboard-header">
+        <div>
+            <h1>🛡 Admin Dashboard</h1>
+            <p class="welcome-text">System overview and management controls</p>
+        </div>
+        <span class="live-indicator">
+            <span class="live-dot"></span>
+            SYSTEM ONLINE
+        </span>
+    </div>
+
+    <!-- Admin Stats -->
+    <div class="stats-grid">
+        <div class="stat-card green">
+            <div class="card-icon green">👥</div>
+            <div class="stat-info">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value green">{{ total_users }}</div>
+            </div>
+        </div>
+        <div class="stat-card blue">
+            <div class="card-icon blue">💎</div>
+            <div class="stat-info">
+                <div class="stat-label">Active Subs</div>
+                <div class="stat-value blue">{{ active_subs }}</div>
+            </div>
+        </div>
+        <div class="stat-card purple">
+            <div class="card-icon purple">🔑</div>
+            <div class="stat-info">
+                <div class="stat-label">Keys Generated</div>
+                <div class="stat-value purple">{{ total_keys }}</div>
+            </div>
+        </div>
+        <div class="stat-card pink">
+            <div class="card-icon pink">🎯</div>
+            <div class="stat-info">
+                <div class="stat-label">Signals Today</div>
+                <div class="stat-value pink">{{ signals_today }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="stats-grid">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">⚡ Quick Actions</span>
+            </div>
+            <div class="d-flex flex-wrap gap-1">
+                <button class="btn btn-primary btn-sm" onclick="generateKey('week')">🔑 Gen Weekly Key</button>
+                <button class="btn btn-primary btn-sm" onclick="generateKey('month')">🔑 Gen Monthly Key</button>
+                <button class="btn btn-purple btn-sm" onclick="generateKey('lifetime')">🔑 Gen Lifetime Key</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📢 Quick Broadcast</span>
+            </div>
+            <div class="d-flex gap-1">
+                <input type="text" id="quick-broadcast" class="form-control" placeholder="Type message...">
+                <button class="btn btn-primary btn-sm" onclick="quickBroadcast()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card mt-2">
+        <div class="card-header">
+            <span class="card-title">📋 Recent Activity</span>
+        </div>
+        <div id="activity-feed" style="max-height: 400px; overflow-y: auto;">
+            {% for activity in recent_activity %}
+            <div style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-green)">●</span>
+                <span>{{ activity.message }}</span>
+                <span style="color: var(--text-muted); margin-left: auto; font-size: 0.75rem">{{ activity.time }}</span>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No recent activity</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function quickBroadcast() {
+    const msg = document.getElementById('quick-broadcast').value;
+    if (!msg) return showToast('Enter a message', 'warning');
+    fetch('/admin/api/broadcast', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: msg})
+    }).then(r => r.json()).then(d => {
+        if (d.success) {
+            showToast(`Sent to ${d.count} users`, 'success');
+            document.getElementById('quick-broadcast').value = '';
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Register — MK Sniper Bot{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Create Account 🚀</h2>
+        <p class="subtitle">Start with 2 free trial signals</p>
+
+        <form method="POST" action="{{ url_for('register_page') }}">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="fullname" class="form-control" placeholder="Your full name" required>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Telegram ID (optional)</label>
+                <input type="text" name="telegram_id" class="form-control" placeholder="Your Telegram user ID">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Create a strong password" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">🚀 Create Account</button>
+        </form>
+
+        <div class="auth-footer mt-2">
+            Already have an account? <a href="{{ url_for('login_page') }}">Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

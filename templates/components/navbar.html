@@ -1,0 +1,23 @@
+<nav class="navbar" id="navbar">
+    <a href="/" class="navbar-brand">
+        <img src="{{ url_for('static', filename='assets/logo.svg') }}" alt="MK Sniper">
+        <span>MK SNIPER</span>
+    </a>
+
+    <button class="mobile-toggle" id="mobile-toggle">☰</button>
+
+    <ul class="navbar-links" id="navbar-links">
+        {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">📊 Dashboard</a></li>
+            <li><a href="{{ url_for('signals_page') }}" class="{% if request.endpoint == 'signals_page' %}active{% endif %}">🎯 Signals</a></li>
+            <li><a href="{{ url_for('subscribe_page') }}" class="{% if request.endpoint == 'subscribe_page' %}active{% endif %}">💎 Plans</a></li>
+            {% if current_user.is_admin %}
+            <li><a href="{{ url_for('admin_panel') }}" class="admin-badge">🛡 ADMIN</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+        {% else %}
+            <li><a href="{{ url_for('login_page') }}">🔑 Login</a></li>
+            <li><a href="{{ url_for('register_page') }}" class="btn btn-primary btn-sm">🚀 Get Started</a></li>
+        {% endif %}
+    </ul>
+</nav>

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}MK Sniper Bot — Professional Trading Signals{% endblock %}
+
+{% block content %}
+<!-- Ticker Bar -->
+<div class="ticker-bar">
+    <div class="ticker-content"></div>
+</div>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>
+            <span class="gradient-text">Precision Trading</span><br>
+            <span class="hot-text">Signals Engine</span>
+        </h1>
+        <p>AI-powered adaptive signal generation with 97%+ accuracy across Forex, OTC, Crypto, and Commodities. Subscribe and dominate the markets.</p>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="number" data-count="97">0</span>
+                <span class="label">% Win Rate</span>
+            </div>
+            <div class="hero-stat">
+                <span class="number" data-count="50">0</span>
+                <span class="label">+ Assets</span>
+            </div>
+            <div class="hero-stat">
+                <span class="number" data-count="2500">0</span>
+                <span class="label">Active Traders</span>
+            </div>
+            <div class="hero-stat">
+                <span class="number" data-count="24">0</span>
+                <span class="label">/7 Live</span>
+            </div>
+        </div>
+
+        <div class="hero-cta">
+            <a href="{{ url_for('register_page') }}" class="btn btn-primary btn-lg">🚀 Start Trading Now</a>
+            <a href="{{ url_for('login_page') }}" class="btn btn-secondary btn-lg">🔑 Login</a>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="container">
+    <h2 class="text-center mb-4" style="font-size: 2rem; font-weight: 800;">Why <span style="color: var(--accent-green)">MK SNIPER</span>?</h2>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Adaptive Signal Engine</h3>
+            <p>Duration-regime analysis automatically adapts to your chosen timeframe — micro scalping, momentum, or swing.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Real-Time Data</h3>
+            <p>Live market feeds from Binance, Yahoo Finance, and proprietary OTC simulators for maximum accuracy.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>Telegram Bot Integration</h3>
+            <p>Receive signals directly on Telegram. Trade from anywhere, anytime with instant notifications.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Secure Subscription</h3>
+            <p>USDT payments with admin-verified activation. Your access key unlocks premium signals instantly.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>50+ Trading Pairs</h3>
+            <p>Forex, OTC pairs, commodities, stocks, and crypto — all in one dashboard with full coverage.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💎</div>
+            <h3>First-Entry Guarantee</h3>
+            <p>Our confluence engine ensures signal precision with wave-structure analysis and multi-indicator validation.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Plans Preview -->
+<section class="container mt-4 mb-4">
+    <h2 class="text-center mb-4" style="font-size: 2rem; font-weight: 800;">Choose Your <span style="color: var(--accent-green)">Plan</span></h2>
+
+    <div class="plans-grid">
+        <div class="plan-card">
+            <div class="plan-name">Weekly</div>
+            <div class="plan-price">$20</div>
+            <div class="plan-period">7 days access</div>
+            <ul class="plan-features">
+                <li>Unlimited signals</li>
+                <li>All trading pairs</li>
+                <li>Telegram bot access</li>
+                <li>Web dashboard</li>
+            </ul>
+            <a href="{{ url_for('register_page') }}" class="btn btn-secondary btn-block">Get Started</a>
+        </div>
+
+        <div class="plan-card featured">
+            <div class="plan-name">Monthly</div>
+            <div class="plan-price">$100</div>
+            <div class="plan-period">30 days access</div>
+            <ul class="plan-features">
+                <li>Unlimited signals</li>
+                <li>All trading pairs</li>
+                <li>Telegram bot access</li>
+                <li>Web dashboard</li>
+                <li>Priority support</li>
+                <li>Strategy videos</li>
+            </ul>
+            <a href="{{ url_for('register_page') }}" class="btn btn-primary btn-block">Get Started</a>
+        </div>
+
+        <div class="plan-card">
+            <div class="plan-name">Lifetime</div>
+            <div class="plan-price">$150</div>
+            <div class="plan-period">Forever access</div>
+            <ul class="plan-features">
+                <li>Unlimited signals</li>
+                <li>All trading pairs</li>
+                <li>Telegram bot access</li>
+                <li>Web dashboard</li>
+                <li>VIP support</li>
+                <li>All future updates</li>
+                <li>Exclusive strategies</li>
+            </ul>
+            <a href="{{ url_for('register_page') }}" class="btn btn-purple btn-block">Get Started</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

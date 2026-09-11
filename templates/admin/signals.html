@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Signal Management — Admin{% endblock %}
+
+{% block content %}
+<div class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar-header">
+        <h3>Admin Panel</h3>
+        <p>🛡 Command Center</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="{{ url_for('admin_panel') }}"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_users') }}"><span class="icon">👥</span> Users</a></li>
+        <li><a href="{{ url_for('admin_keys') }}"><span class="icon">🔑</span> Access Keys</a></li>
+        <li><a href="{{ url_for('admin_signals') }}" class="active"><span class="icon">🎯</span> Signals</a></li>
+        <li><a href="{{ url_for('admin_content') }}"><span class="icon">🎬</span> Content</a></li>
+        <li><a href="{{ url_for('admin_broadcast_page') }}"><span class="icon">📢</span> Broadcast</a></li>
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Back to Site</a></li>
+    </ul>
+</div>
+
+<div class="admin-content">
+    <div class="dashboard-header">
+        <h1>🎯 Signal History</h1>
+        <span class="badge badge-info">{{ signals|length }} signals</span>
+    </div>
+
+    <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Pair</th>
+                    <th>Direction</th>
+                    <th>Duration</th>
+                    <th>Accuracy</th>
+                    <th>User</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in signals %}
+                <tr>
+                    <td>{{ s.time }}</td>
+                    <td><b>{{ s.pair }}</b></td>
+                    <td>
+                        <span class="badge {% if s.direction == 'CALL' %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ '🟢' if s.direction == 'CALL' else '🔴' }} {{ s.direction }}
+                        </span>
+                    </td>
+                    <td>{{ s.duration }}</td>
+                    <td style="color: var(--accent-green)">{{ s.accuracy }}%</td>
+                    <td>{{ s.user }}</td>
+                    <td>
+                        <span class="badge {% if s.result == 'WIN' %}badge-success{% elif s.result == 'LOSS' %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ s.result or 'Pending' }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

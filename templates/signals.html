@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Signals — MK Sniper Bot{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>🎯 Signal Generator</h1>
+                <p class="welcome-text">Select market, asset, and duration to generate a precision signal.</p>
+            </div>
+            <span class="live-indicator">
+                <span class="live-dot"></span>
+                ENGINE ACTIVE
+            </span>
+        </div>
+
+        {% if not has_access %}
+        <!-- Locked State -->
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+            <span style="font-size: 4rem;">🔒</span>
+            <h2 class="mt-2">Subscription Required</h2>
+            <p style="color: var(--text-muted); margin: 1rem 0 2rem;">
+                {% if trial_remaining > 0 %}
+                You have <b>{{ trial_remaining }}</b> free trial signal(s) remaining.
+                {% else %}
+                Your free trial has ended. Subscribe to continue receiving signals.
+                {% endif %}
+            </p>
+            <div class="d-flex justify-center gap-2 flex-wrap" style="justify-content: center;">
+                <a href="{{ url_for('subscribe_page') }}" class="btn btn-primary btn-lg">💎 Subscribe Now</a>
+                <a href="https://t.me/{{ admin_username.replace('@','') }}" target="_blank" class="btn btn-secondary btn-lg">📱 Contact Admin</a>
+            </div>
+
+            {% if has_key_input %}
+            <div class="auth-divider mt-4">or enter your access key</div>
+            <form method="POST" action="{{ url_for('redeem_key') }}" style="max-width: 400px; margin: 0 auto;">
+                <div class="form-group">
+                    <input type="text" name="access_key" class="form-control" placeholder="Enter your access key" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">🔑 Activate Key</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <!-- Signal Generation Interface -->
+        <div class="stats-grid">
+            <!-- Market Selection -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🌍 Select Market</span>
+                </div>
+                <div class="d-flex flex-wrap gap-1">
+                    <button class="btn btn-secondary market-btn" data-market="otc" onclick="selectMarket('otc')">🌙 OTC</button>
+                    <button class="btn btn-secondary market-btn" data-market="forex" onclick="selectMarket('forex')">💱 Forex</button>
+                    <button class="btn btn-secondary market-btn" data-market="crypto" onclick="selectMarket('crypto')">₿ Crypto</button>
+                </div>
+            </div>
+
+            <!-- Duration Selection -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">⏱ Select Duration</span>
+                </div>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for key, dur in durations.items() %}
+                    <button class="btn btn-secondary dur-btn" data-dur="{{ key }}" onclick="selectDuration('{{ key }}')">{{ dur.label }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pair Selection -->
+        <div class="card mt-2" id="pairs-section" style="display: none;">
+            <div class="card-header">
+                <span class="card-title">📍 Select Asset</span>
+                <span id="pairs-count" class="badge badge-info">0 pairs</span>
+            </div>
+            <div id="pairs-grid" class="d-flex flex-wrap gap-1"></div>
+        </div>
+
+        <!-- Signal Output -->
+        <div class="card mt-2" id="signal-output" style="display: none;">
+            <div class="card-header">
+                <span class="card-title">⚡ Signal Analysis</span>
+                <div class="loading-spinner" id="signal-spinner"></div>
+            </div>
+            <div id="signal-result"></div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedMarket = null;
+let selectedDuration = null;
+let selectedPair = null;
+const pairsData = {{ pairs_json|safe }};
+
+function selectMarket(market) {
+    selectedMarket = market;
+    document.querySelectorAll('.market-btn').forEach(b => b.classList.remove('btn-primary'));
+    document.querySelector(`[data-market="${market}"]`).classList.add('btn-primary');
+    document.querySelector(`[data-market="${market}"]`).classList.remove('btn-secondary');
+
+    const section = document.getElementById('pairs-section');
+    const grid = document.getElementById('pairs-grid');
+    section.style.display = 'block';
+
+    const filtered = Object.entries(pairsData).filter(([k, v]) => v.type === market);
+    document.getElementById('pairs-count').textContent = `${filtered.length} pairs`;
+
+    grid.innerHTML = filtered.map(([name, info]) => `
+        <button class="btn btn-secondary pair-btn" data-pair="${name}" onclick="selectPair('${name}')">
+            ${name} <small style="color: var(--accent-green)">${info.payout}%</small>
+        </button>
+    `).join('');
+}
+
+function selectDuration(dur) {
+    selectedDuration = dur;
+    document.querySelectorAll('.dur-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-secondary');
+    });
+    const btn = document.querySelector(`[data-dur="${dur}"]`);
+    btn.classList.add('btn-primary');
+    btn.classList.remove('btn-secondary');
+}
+
+async function selectPair(pair) {
+    selectedPair = pair;
+    document.querySelectorAll('.pair-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-secondary');
+    });
+    document.querySelector(`[data-pair="${pair}"]`).classList.add('btn-primary');
+    document.querySelector(`[data-pair="${pair}"]`).classList.remove('btn-secondary');
+
+    if (!selectedDuration) {
+        showToast('Please select a duration first', 'warning');
+        return;
+    }
+
+    const output = document.getElementById('signal-output');
+    const result = document.getElementById('signal-result');
+    const spinner = document.getElementById('signal-spinner');
+    output.style.display = 'block';
+    spinner.style.display = 'block';
+    result.innerHTML = '<p style="color: var(--text-muted);">Analyzing market structure...</p>';
+
+    try {
+        const res = await fetch('/api/generate-signal', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({pair: selectedPair, duration: selectedDuration})
+        });
+        const data = await res.json();
+        spinner.style.display = 'none';
+
+        if (data.success) {
+            const s = data.signal;
+            const dirClass = s.direction === 'CALL' ? 'call' : 'put';
+            const dirIcon = s.direction === 'CALL' ? '🟢 CALL ⬆️' : '🔴 PUT ⬇️';
+            result.innerHTML = `
+                <div class="signal-card ${dirClass}" style="margin: 0; animation: scaleIn 0.5s ease-out;">
+                    <div class="signal-pair">
+                        <h3>${s.pair}</h3>
+                        <span class="signal-direction ${dirClass}">${dirIcon}</span>
+                    </div>
+                    <div class="signal-details">
+                        <div class="signal-detail">
+                            <span class="label">Duration</span>
+                            <span class="value">${s.duration}</span>
+                        </div>
+                        <div class="signal-detail">
+                            <span class="label">Entry Time</span>
+                            <span class="value">${s.entry_time}</span>
+                        </div>
+                        <div class="signal-detail">
+                            <span class="label">MG1 Support</span>
+                            <span class="value">${s.mg_time}</span>
+                        </div>
+                        <div class="signal-detail">
+                            <span class="label">Payout</span>
+                            <span class="value">${s.payout}%</span>
+                        </div>
+                    </div>
+                    <div class="signal-accuracy">
+                        <div class="accuracy-bar">
+                            <div class="accuracy-fill" style="width: ${s.accuracy}%"></div>
+                        </div>
+                        <span class="accuracy-text">${s.accuracy}%</span>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Confluence Filters:</p>
+                        ${s.confluences.map(c => `<p style="font-size: 0.85rem; color: var(--text-secondary);">• ${c}</p>`).join('')}
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--accent-yellow);">⚠️ Execute exactly at the Entry Time for a secure First-Entry win.</p>
+                </div>
+            `;
+        } else {
+            result.innerHTML = `<p style="color: var(--accent-red);">❌ ${data.error}</p>`;
+        }
+    } catch(e) {
+        spinner.style.display = 'none';
+        result.innerHTML = '<p style="color: var(--accent-red);">❌ Network error. Please try again.</p>';
+    }
+}
+</script>
+{% endblock %}
