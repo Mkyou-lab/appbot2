@@ -224,24 +224,23 @@ def landing():
 @flask_app.route("/login", methods=["GET", "POST"])
 def login_page():
     if current_user.is_authenticated:
+        if current_user.is_admin:
+            return redirect(url_for("admin_panel"))
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
         login_input = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-
         user = get_user_by_login(login_input)
-        
+
         if user and user.check_password(password):
-            session.permanent = True # Triggers the 30-day cookie
+            session.permanent = True
             login_user(user, remember=True)
-            
             if user.is_admin:
-                flash("Welcome back, Admin!", "success")
+                flash("Welcome Owner — Admin Panel unlocked", "success")
                 return redirect(url_for("admin_panel"))
-            else:
-                flash(f"Welcome back, {user.fullname}!", "success")
-                return redirect(url_for("dashboard"))
+            flash(f"Welcome back, {user.fullname}!", "success")
+            return redirect(url_for("dashboard"))
 
         flash("Invalid username/email or password.", "error")
 
@@ -301,15 +300,26 @@ def signals_page():
 @flask_app.route("/subscribe")
 @login_required
 def subscribe_page():
-    return render_template("subscribe.html", usdt_address=USDT_ADDRESS, admin_username=ADMIN_USERNAME)
-
+    return render_template(
+        "subscribe.html",
+        usdt_address=USDT_ADDRESS,
+        admin_username=ADMIN_USERNAME
+    )
 # ==================== ADMIN ROUTES ====================
 @flask_app.route("/admin")
 @login_required
 @admin_required
 def admin_panel():
-    return render_template("admin/panel.html", total_users=len(get_all_users()), active_subs=0, total_keys=0, signals_today=0, recent_activity=[])
-
+    users = get_all_users()
+    active_subs = sum(1 for u in users.values() if u.plan in ["week", "month", "lifetime"])
+    return render_template(
+        "admin/panel.html",
+        total_users=len(users),
+        active_subs=active_subs,
+        total_keys=len(get_all_keys()),
+        signals_today=len(get_signals_history()),
+        recent_activity=get_activity()[:30]
+    )
 @flask_app.route("/admin/users")
 @login_required
 @admin_required
