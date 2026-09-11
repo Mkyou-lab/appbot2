@@ -10,7 +10,7 @@
         <form method="POST" action="{{ url_for('login_page') }}">
             <div class="form-group">
                 <label>Username or Email</label>
-                <input type="text" name="username" class="form-control" placeholder="Enter your username" required>
+                <input type="text" name="username" class="form-control" placeholder="admin or your email" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
@@ -21,8 +21,8 @@
 
         <div class="auth-divider">or</div>
 
-        <a href="https://t.me/MKSniperBot" target="_blank" class="btn btn-secondary btn-block">
-            📱 Use Telegram Bot Instead
+        <a href="https://t.me/{{ config.get('ADMIN_USERNAME','Mkg12333').replace('@','') }}" target="_blank" class="btn btn-secondary btn-block">
+            📱 Open Telegram Bot
         </a>
 
         <div class="auth-footer">
