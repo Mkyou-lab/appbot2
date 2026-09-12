@@ -20,7 +20,9 @@ socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
 USERS_FILE = 'users.json'
 KEYS_FILE = 'access_keys.json'
 CONTENT_FILE = 'content.json'
+ADMIN_EMAIL = "kabirolamide07043@gmail.com"
 
+# Safely load JSON files
 def load_data(filepath):
     if not os.path.exists(filepath):
         return []
@@ -42,7 +44,7 @@ def save_data(filepath, data):
     except Exception as e:
         print(f"[ERROR] Error saving {filepath}: {e}")
 
-# Global Template Injector: Prevents UndefinedError in templates like navbar.html
+# Inject 'user' variable into ALL templates globally to prevent UndefinedError
 @app.context_processor
 def inject_user():
     current_user = None
@@ -51,26 +53,21 @@ def inject_user():
         current_user = next((u for u in users if u.get('email') == session['user'].get('email')), session['user'])
     return dict(user=current_user)
 
+# Print any crash errors directly to the screen for easy fixing
 @app.errorhandler(500)
 def internal_error(e):
     tb = traceback.format_exc()
-    return f"""
-    <div style="background:#090d16; color:#ff5555; padding:30px; font-family:monospace; border:2px solid #ff5555; border-radius:10px; margin:20px;">
-        <h2>⚠️ MK SNIPER - SERVER ERROR DEBUGGER</h2>
-        <pre style="background:#000; padding:15px; border-radius:5px; overflow-x:auto; color:#4af626;">{tb}</pre>
-    </div>
-    """, 500
+    return f"<div style='background:#111;color:#ff5555;padding:20px;'><pre>{tb}</pre></div>", 500
 
+# Auto-Create Admin Account on Startup
 def sync_admin():
-    admin_email = "kabirolamide07043@gmail.com"
     admin_password = os.environ.get("ADMIN_PASSWORD", "AdminPass123!")
     users = load_data(USERS_FILE)
-    
-    admin = next((u for u in users if u.get('email') == admin_email), None)
+    admin = next((u for u in users if u.get('email') == ADMIN_EMAIL), None)
     if not admin:
         users.append({
-            "username": "Admin",
-            "email": admin_email,
+            "username": "MK_OWNER",
+            "email": ADMIN_EMAIL,
             "password": generate_password_hash(admin_password),
             "subscribed": True,
             "expiry_date": (datetime.now() + timedelta(days=3650)).strftime("%Y-%m-%d"),
@@ -84,18 +81,16 @@ sync_admin()
 def make_session_permanent():
     session.permanent = True
 
+# ----------------- TELEGRAM BOT LOGIC -----------------
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8890005372:AAHrbrMdHc6KqiyV30KoDNwPf5-IzcngQpQ")
 bot_started = False
 
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
-    welcome_text = (
-        f"🎯 *MK SNIPER BOT v47.0 VIP ACCESS*\n\n"
-        f"Your Telegram ID: `{user_id}`\n\n"
-        f"1️⃣ Enter key starting with `MK-` to activate access."
-    )
-    await context.bot.send_message(chat_id=chat_id, text=welcome_text, parse_mode='Markdown')
+    text = (f"🎯 *MK SNIPER BOT v47.0*\n\nYour Telegram ID: `{user_id}`\n\n"
+            f"Send a valid access key starting with `MK-` to unlock VIP Signals.")
+    await context.bot.send_message(chat_id=chat_id, text=text, parse_mode='Markdown')
 
 async def handle_key_msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
@@ -123,9 +118,9 @@ async def handle_key_msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             if not user_found:
                 users.append({
-                    "username": f"TG_{user_id}",
+                    "username": f"TG_User_{user_id}",
                     "email": f"tg_{user_id}@mksniper.com",
-                    "password": generate_password_hash("telegram_user"),
+                    "password": generate_password_hash("telegram"),
                     "subscribed": True,
                     "expiry_date": expiry,
                     "telegram_id": user_id
@@ -144,20 +139,19 @@ def run_tg_bot():
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_key_msg))
         application.run_polling(stop_signals=None)
     except Exception as e:
-        print(f"[ERROR] Telegram Bot error: {e}")
+        print(f"[ERROR] Bot crash: {e}")
 
 @app.before_request
 def start_bot_thread():
     global bot_started
     if not bot_started and TELEGRAM_BOT_TOKEN:
         bot_started = True
-        t = threading.Thread(target=run_tg_bot, daemon=True)
-        t.start()
+        threading.Thread(target=run_tg_bot, daemon=True).start()
 
+# ----------------- WEB ROUTES -----------------
 @app.route('/')
 def index():
-    if 'user' in session:
-        return redirect(url_for('dashboard'))
+    if 'user' in session: return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -171,7 +165,7 @@ def login():
         if user and check_password_hash(user.get('password', ''), password):
             session['user'] = user
             return redirect(url_for('dashboard'))
-        return render_template('login.html', error="Invalid credentials")
+        return render_template('login.html', error="Invalid email or password.")
     return render_template('login.html')
 
 @app.route('/register', methods=['POST'])
@@ -182,7 +176,7 @@ def register():
     
     users = load_data(USERS_FILE)
     if any(u.get('email', '').lower() == email for u in users):
-        return render_template('login.html', error="Email already registered")
+        return render_template('login.html', error="Email is already in use.")
     
     new_user = {
         "username": username,
@@ -195,46 +189,28 @@ def register():
     users.append(new_user)
     save_data(USERS_FILE, users)
     session['user'] = new_user
+    print(f"[NEW REGISTRATION] User: {username}, Email: {email}") # Log for admin
     return redirect(url_for('dashboard'))
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    
-    users = load_data(USERS_FILE)
-    user_email = session['user'].get('email')
-    current_user = next((u for u in users if u.get('email') == user_email), session['user'])
-    session['user'] = current_user
-    
+    if 'user' not in session: return redirect(url_for('login'))
     content = load_data(CONTENT_FILE)
-    return render_template('dashboard.html', user=current_user, content=content)
+    return render_template('dashboard.html', content=content)
 
 @app.route('/signals')
 def signals():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    
+    if 'user' not in session: return redirect(url_for('login'))
     users = load_data(USERS_FILE)
-    user_email = session['user'].get('email')
-    current_user = next((u for u in users if u.get('email') == user_email), session['user'])
-    
+    current_user = next((u for u in users if u.get('email') == session['user'].get('email')), session['user'])
     if not current_user.get('subscribed', False):
-        return redirect(url_for('subscribe'))
-    
-    return render_template('signals.html', user=current_user)
-
-@app.route('/subscribe')
-def subscribe():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template('subscribe.html')
+        return redirect(url_for('dashboard'))
+    return render_template('signals.html')
 
 @app.route('/admin')
 def admin_panel():
-    if 'user' not in session or session['user'].get('email') != 'kabirolamide07043@gmail.com':
+    if 'user' not in session or session['user'].get('email') != ADMIN_EMAIL:
         return redirect(url_for('login'))
-    
     users = load_data(USERS_FILE)
     keys = load_data(KEYS_FILE)
     content = load_data(CONTENT_FILE)
@@ -242,83 +218,61 @@ def admin_panel():
     stats = {
         "total_users": len(users),
         "active_keys": len([k for k in keys if not k.get('used', False)]),
-        "total_videos": len(content)
+        "videos": len(content)
     }
-    return render_template('admin.html', users=users, keys=keys, content=content, stats=stats)
+    return render_template('admin.html', users=users, keys=keys, stats=stats)
 
 @app.route('/admin/generate_key', methods=['POST'])
 def generate_key():
-    if 'user' not in session or session['user'].get('email') != 'kabirolamide07043@gmail.com':
-        return jsonify({"error": "Unauthorized"}), 403
-    
+    if 'user' not in session or session['user'].get('email') != ADMIN_EMAIL: return "Unauthorized", 403
     duration = int(request.form.get('duration', 30))
-    raw_key = f"MK-{secrets.token_hex(4).upper()}"
-    
     keys = load_data(KEYS_FILE)
     keys.append({
-        "key": raw_key,
+        "key": f"MK-{secrets.token_hex(4).upper()}",
         "duration": duration,
-        "used": False,
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "used": False
     })
     save_data(KEYS_FILE, keys)
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/add_content', methods=['POST'])
-def add_content():
-    if 'user' not in session or session['user'].get('email') != 'kabirolamide07043@gmail.com':
-        return jsonify({"error": "Unauthorized"}), 403
-    
-    title = request.form.get('title')
-    raw_url = request.form.get('url')
-    
-    embed_url = raw_url
-    if "watch?v=" in raw_url:
-        embed_url = raw_url.replace("watch?v=", "embed/")
-    elif "youtu.be/" in raw_url:
-        embed_url = raw_url.replace("youtu.be/", "youtube.com/embed/")
-        
-    content = load_data(CONTENT_FILE)
-    content.append({
-        "id": secrets.token_hex(4),
-        "title": title,
-        "url": embed_url,
-        "type": "video"
-    })
-    save_data(CONTENT_FILE, content)
-    return redirect(url_for('admin_panel'))
-
 @app.route('/admin/delete_user', methods=['POST'])
 def delete_user():
-    if 'user' not in session or session['user'].get('email') != 'kabirolamide07043@gmail.com':
-        return jsonify({"error": "Unauthorized"}), 403
-    
-    email_to_del = request.form.get('email')
-    users = load_data(USERS_FILE)
-    users = [u for u in users if u.get('email') != email_to_del]
+    if 'user' not in session or session['user'].get('email') != ADMIN_EMAIL: return "Unauthorized", 403
+    email = request.form.get('email')
+    users = [u for u in load_data(USERS_FILE) if u.get('email') != email]
     save_data(USERS_FILE, users)
     return redirect(url_for('admin_panel'))
 
+@app.route('/api/redeem_key', methods=['POST'])
+def redeem_key():
+    if 'user' not in session: return jsonify({"success": False, "message": "Not logged in"})
+    key_input = request.json.get('key', '').strip()
+    keys = load_data(KEYS_FILE)
+    key_obj = next((k for k in keys if k.get('key') == key_input and not k.get('used', False)), None)
+    
+    if key_obj:
+        key_obj['used'] = True
+        save_data(KEYS_FILE, keys)
+        users = load_data(USERS_FILE)
+        for u in users:
+            if u.get('email') == session['user'].get('email'):
+                u['subscribed'] = True
+                u['expiry_date'] = (datetime.now() + timedelta(days=int(key_obj.get('duration', 30)))).strftime("%Y-%m-%d")
+                session['user'] = u
+                break
+        save_data(USERS_FILE, users)
+        return jsonify({"success": True, "message": "Key redeemed!"})
+    return jsonify({"success": False, "message": "Invalid key."})
+
 @app.route('/api/generate_signal', methods=['POST'])
 def generate_signal():
-    if 'user' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-    
+    if 'user' not in session: return "Unauthorized", 401
     data = request.json or {}
-    pair = data.get('pair', 'EUR/USD (OTC)')
-    duration = data.get('duration', '1m')
-    
-    action = random.choice(["CALL (BUY) 📈", "PUT (SELL) 📉"])
-    accuracy = round(random.uniform(92.5, 99.1), 1)
-    entry_time = (datetime.now() + timedelta(seconds=5)).strftime("%H:%M:%S")
-    
     return jsonify({
-        "status": "success",
-        "pair": pair,
-        "duration": duration,
-        "action": action,
-        "accuracy": f"{accuracy}%",
-        "entry_time": entry_time
+        "pair": data.get('pair', 'EUR/USD (OTC)'),
+        "action": random.choice(["CALL (BUY) 📈", "PUT (SELL) 📉"]),
+        "accuracy": f"{round(random.uniform(92.5, 99.1), 1)}%",
+        "entry_time": (datetime.now() + timedelta(seconds=5)).strftime("%H:%M:%S")
     })
 
 @app.route('/logout')
@@ -327,6 +281,5 @@ def logout():
     return redirect(url_for('login'))
 
 flask_app = app
-
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000)
