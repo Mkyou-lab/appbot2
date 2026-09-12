@@ -4,6 +4,7 @@ import random
 import secrets
 import threading
 import asyncio
+import traceback
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_socketio import SocketIO
@@ -22,20 +23,40 @@ USERS_FILE = 'users.json'
 KEYS_FILE = 'access_keys.json'
 CONTENT_FILE = 'content.json'
 
-# Helper Functions for File I/O
+# Failsafe Safe Data Loader (Handles empty/corrupted files)
 def load_data(filepath):
     if not os.path.exists(filepath):
         return []
     try:
-        with open(filepath, 'r') as f:
-            data = json.load(f)
+        with open(filepath, 'r', encoding='utf-8') as f:
+            text = f.read().strip()
+            if not text:
+                return []
+            data = json.loads(text)
             return data if isinstance(data, list) else []
-    except Exception:
+    except Exception as e:
+        print(f"[WARN] Error loading {filepath}: {e}")
         return []
 
 def save_data(filepath, data):
-    with open(filepath, 'w') as f:
-        json.dump(data, f, indent=4)
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        print(f"[ERROR] Error saving {filepath}: {e}")
+
+# Live Debugger (Displays exact error details on screen if a 500 happens)
+@app.errorhandler(500)
+def internal_error(e):
+    tb = traceback.format_exc()
+    print(f"[500 ERROR TRACEBACK]:\n{tb}")
+    return f"""
+    <div style="background:#090d16; color:#ff5555; padding:30px; font-family:monospace; border:2px solid #ff5555; border-radius:10px; margin:20px;">
+        <h2>⚠️ MK SNIPER - SERVER ERROR DEBUGGER</h2>
+        <p style="color:#fff;"><b>Traceback Details:</b></p>
+        <pre style="background:#000; padding:15px; border-radius:5px; overflow-x:auto; color:#4af626;">{tb}</pre>
+    </div>
+    """, 500
 
 # Automatic Admin Provisioning
 def sync_admin():
@@ -54,11 +75,9 @@ def sync_admin():
             "telegram_id": None
         })
         save_data(USERS_FILE, users)
-        print("[INFO] Admin account auto-created.")
 
 sync_admin()
 
-# Permanent Session Hook
 @app.before_request
 def make_session_permanent():
     session.permanent = True
@@ -73,8 +92,7 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         f"🎯 *MK SNIPER BOT v47.0 VIP ACCESS*\n\n"
         f"Your Telegram ID: `{user_id}`\n\n"
-        f"1️⃣ Link this ID in your Web Dashboard under Profile.\n"
-        f"2️⃣ Enter your key (e.g. `MK-XXXXXX`) below to activate instant access on both Web & Telegram."
+        f"1️⃣ Enter key starting with `MK-` to activate access."
     )
     await context.bot.send_message(chat_id=chat_id, text=welcome_text, parse_mode='Markdown')
 
@@ -89,13 +107,12 @@ async def handle_key_msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if key_obj:
             days = int(key_obj.get('duration', 30))
             key_obj['used'] = True
-            key_obj['used_by_telegram'] = user_id
             save_data(KEYS_FILE, keys)
             
             users = load_data(USERS_FILE)
-            user_found = False
             expiry = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
             
+            user_found = False
             for u in users:
                 if str(u.get('telegram_id')) == user_id:
                     u['subscribed'] = True
@@ -105,7 +122,7 @@ async def handle_key_msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             if not user_found:
                 users.append({
-                    "username": f"TG_User_{user_id}",
+                    "username": f"TG_{user_id}",
                     "email": f"tg_{user_id}@mksniper.com",
                     "password": generate_password_hash("telegram_user"),
                     "subscribed": True,
@@ -113,16 +130,14 @@ async def handle_key_msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "telegram_id": user_id
                 })
             save_data(USERS_FILE, users)
-            await update.message.reply_text(f"✅ Key Activated Successfully!\nDuration: {days} Days.\nWeb & Telegram unlocked.")
+            await update.message.reply_text(f"✅ Key Activated Successfully!\nDuration: {days} Days.")
         else:
             await update.message.reply_text("❌ Invalid or already redeemed key.")
-    else:
-        await update.message.reply_text("Send your subscription key starting with `MK-` to unlock access.")
 
 def run_tg_bot():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
         application.add_handler(CommandHandler("start", start_cmd))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_key_msg))
@@ -143,7 +158,7 @@ def start_bot_thread():
 def index():
     if 'user' in session:
         return redirect(url_for('dashboard'))
-    return render_template('login.html')
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -156,7 +171,7 @@ def login():
         if user and check_password_hash(user.get('password', ''), password):
             session['user'] = user
             return redirect(url_for('dashboard'))
-        return render_template('login.html', error="Invalid email or password")
+        return render_template('login.html', error="Invalid credentials")
     return render_template('login.html')
 
 @app.route('/register', methods=['POST'])
@@ -188,7 +203,8 @@ def dashboard():
         return redirect(url_for('login'))
     
     users = load_data(USERS_FILE)
-    current_user = next((u for u in users if u.get('email') == session['user'].get('email')), session['user'])
+    user_email = session['user'].get('email')
+    current_user = next((u for u in users if u.get('email') == user_email), session['user'])
     session['user'] = current_user
     
     content = load_data(CONTENT_FILE)
@@ -200,7 +216,8 @@ def signals():
         return redirect(url_for('login'))
     
     users = load_data(USERS_FILE)
-    current_user = next((u for u in users if u.get('email') == session['user'].get('email')), session['user'])
+    user_email = session['user'].get('email')
+    current_user = next((u for u in users if u.get('email') == user_email), session['user'])
     
     if not current_user.get('subscribed', False):
         return redirect(url_for('subscribe'))
@@ -255,7 +272,6 @@ def add_content():
     title = request.form.get('title')
     raw_url = request.form.get('url')
     
-    # Format YouTube embed links cleanly
     embed_url = raw_url
     if "watch?v=" in raw_url:
         embed_url = raw_url.replace("watch?v=", "embed/")
@@ -282,30 +298,6 @@ def delete_user():
     users = [u for u in users if u.get('email') != email_to_del]
     save_data(USERS_FILE, users)
     return redirect(url_for('admin_panel'))
-
-@app.route('/api/redeem_key', methods=['POST'])
-def redeem_key():
-    if 'user' not in session:
-        return jsonify({"success": False, "message": "Not authenticated"}), 401
-    
-    key_input = request.json.get('key', '').strip()
-    keys = load_data(KEYS_FILE)
-    key_obj = next((k for k in keys if k.get('key') == key_input and not k.get('used', False)), None)
-    
-    if key_obj:
-        key_obj['used'] = True
-        save_data(KEYS_FILE, keys)
-        
-        users = load_data(USERS_FILE)
-        for u in users:
-            if u.get('email') == session['user'].get('email'):
-                u['subscribed'] = True
-                u['expiry_date'] = (datetime.now() + timedelta(days=int(key_obj.get('duration', 30)))).strftime("%Y-%m-%d")
-                session['user'] = u
-                break
-        save_data(USERS_FILE, users)
-        return jsonify({"success": True, "message": "Key redeemed successfully!"})
-    return jsonify({"success": False, "message": "Invalid or expired key."})
 
 @app.route('/api/generate_signal', methods=['POST'])
 def generate_signal():
