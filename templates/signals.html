@@ -1,173 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MK SNIPER - Precision Wizard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@600;700&display=swap');
-        body { font-family: 'Rajdhani', sans-serif; background: #030712; color: #f3f4f6; }
-        .font-orbitron { font-family: 'Orbitron', sans-serif; }
-        .glow-card { box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); }
-    </style>
-</head>
-<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
+{% extends 'base.html' %}
+{% block content %}
+<div class="w-full max-w-xl mx-auto bg-slate-900 rounded-2xl p-8 border border-cyan-500/30 shadow-2xl shadow-cyan-500/10">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-black font-orbitron text-cyan-400">SIGNAL WIZARD</h1>
+        <p class="text-slate-400 text-sm">Select Market Pair & Timeframe</p>
+    </div>
 
-    <!-- Navbar -->
-    <nav class="border-b border-cyan-500/20 bg-slate-900/80 p-4 flex justify-between items-center">
-        <a href="/dashboard" class="text-xl font-black font-orbitron text-cyan-400">MK SNIPER v47.0</a>
-        <a href="/dashboard" class="text-sm text-slate-400 hover:text-cyan-400 transition"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    </nav>
+    <div id="step-1" class="space-y-4">
+        <label class="block font-orbitron text-cyan-400 text-sm">EXPIRATION TIMEFRAME</label>
+        <select id="duration" class="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-white font-bold outline-none focus:border-cyan-500">
+            <option value="1m">1 Minute</option>
+            <option value="5m">5 Minutes</option>
+            <option value="15m">15 Minutes</option>
+        </select>
+        
+        <label class="block font-orbitron text-cyan-400 text-sm mt-4">ASSET PAIR</label>
+        <select id="pair" class="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-white font-bold outline-none focus:border-cyan-500">
+            <option value="EUR/USD (OTC)">EUR/USD (OTC)</option>
+            <option value="GBP/USD (OTC)">GBP/USD (OTC)</option>
+            <option value="BTC/USDT">BTC/USDT</option>
+        </select>
+        
+        <button onclick="analyze()" class="w-full mt-6 py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black font-orbitron text-lg rounded-xl transition">
+            GENERATE SIGNAL
+        </button>
+    </div>
 
-    <!-- Signal Wizard Container -->
-    <main class="max-w-2xl w-full mx-auto p-6">
-        <div class="bg-slate-900 rounded-2xl p-8 glow-card space-y-6 relative overflow-hidden">
-            
-            <div class="text-center">
-                <h1 class="text-3xl font-black font-orbitron text-cyan-400">SIGNAL WIZARD</h1>
-                <p class="text-slate-400 text-sm mt-1">Select Market & Timeframe to Generate Precision Entry</p>
-            </div>
+    <!-- Loading -->
+    <div id="loading" class="hidden text-center py-12 space-y-4">
+        <i class="fas fa-circle-notch fa-spin text-4xl text-cyan-400"></i>
+        <p class="font-mono text-cyan-400" id="logText">Analyzing Market Volume...</p>
+    </div>
 
-            <!-- Step 1: Market -->
-            <div id="step-1" class="space-y-4">
-                <label class="block font-orbitron text-cyan-400 text-sm">STEP 1: SELECT MARKET CATEGORY</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="selectMarket('Binary OTC')" class="p-4 bg-slate-850 hover:bg-cyan-950 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold transition">Binary OTC</button>
-                    <button onclick="selectMarket('Crypto')" class="p-4 bg-slate-850 hover:bg-cyan-950 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold transition">Crypto Market</button>
-                    <button onclick="selectMarket('Forex Major')" class="p-4 bg-slate-850 hover:bg-cyan-950 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold transition">Forex Pairs</button>
-                    <button onclick="selectMarket('Commodities')" class="p-4 bg-slate-850 hover:bg-cyan-950 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold transition">Commodities</button>
-                </div>
-            </div>
-
-            <!-- Step 2: Timeframe -->
-            <div id="step-2" class="hidden space-y-4">
-                <label class="block font-orbitron text-cyan-400 text-sm">STEP 2: EXPIRATION TIMEFRAME</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="selectDuration('1m')" class="p-3 bg-slate-850 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold">1 Min</button>
-                    <button onclick="selectDuration('2m')" class="p-3 bg-slate-850 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold">2 Mins</button>
-                    <button onclick="selectDuration('5m')" class="p-3 bg-slate-850 border border-slate-700 hover:border-cyan-500 rounded-xl font-bold">5 Mins</button>
-                </div>
-            </div>
-
-            <!-- Step 3: Pair Selection -->
-            <div id="step-3" class="hidden space-y-4">
-                <label class="block font-orbitron text-cyan-400 text-sm">STEP 3: ASSET PAIR</label>
-                <select id="pairSelect" class="w-full bg-slate-950 border border-cyan-500/40 p-4 rounded-xl text-white font-bold outline-none">
-                    <option value="EUR/USD (OTC)">EUR/USD (OTC)</option>
-                    <option value="GBP/USD (OTC)">GBP/USD (OTC)</option>
-                    <option value="USD/JPY (OTC)">USD/JPY (OTC)</option>
-                    <option value="BTC/USDT">BTC/USDT</option>
-                    <option value="ETH/USDT">ETH/USDT</option>
-                    <option value="GOLD (XAU/USD)">GOLD (XAU/USD)</option>
-                </select>
-                <button onclick="startAnalysis()" class="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black font-orbitron text-lg rounded-xl transition shadow-lg shadow-cyan-500/30">
-                    ANALYZE MARKET NOW
-                </button>
-            </div>
-
-            <!-- Step 4: Hacker Terminal Delay -->
-            <div id="step-4" class="hidden text-center py-8 space-y-4">
-                <div class="inline-block p-4 rounded-full border-2 border-cyan-500 animate-spin text-cyan-400 text-2xl">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <div id="consoleLog" class="font-mono text-cyan-400 text-sm">Bypassing Market Noise...</div>
-            </div>
-
-            <!-- Step 5: Signal Result -->
-            <div id="step-5" class="hidden text-center space-y-6">
-                <div class="border border-emerald-500/40 bg-emerald-950/20 p-6 rounded-2xl">
-                    <p class="text-xs text-slate-400 uppercase tracking-widest font-orbitron">GENERATED SIGNAL</p>
-                    <h2 id="pairResult" class="text-2xl font-bold text-white mt-1">EUR/USD (OTC)</h2>
-                    <div id="actionResult" class="text-4xl font-black font-orbitron my-4 text-emerald-400">CALL (BUY) 📈</div>
-                    <div class="flex justify-around text-sm border-t border-slate-800 pt-4">
-                        <div>
-                            <span class="text-slate-400">Accuracy:</span>
-                            <span id="accuracyResult" class="font-bold text-cyan-400">98.4%</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400">Entry Time:</span>
-                            <span id="timeResult" class="font-bold text-cyan-400">12:00:05</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="resetWizard()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold rounded-xl transition">
-                    GENERATE ANOTHER SIGNAL
-                </button>
-            </div>
-
+    <!-- Result -->
+    <div id="result" class="hidden text-center space-y-6">
+        <div class="border border-emerald-500/40 bg-emerald-950/20 p-6 rounded-2xl">
+            <p class="text-xs text-slate-400 font-orbitron">SIGNAL FOUND</p>
+            <h2 id="resPair" class="text-2xl font-bold text-white mt-1">--</h2>
+            <div id="resAction" class="text-4xl font-black font-orbitron my-4 text-emerald-400">--</div>
+            <p class="text-slate-400 text-sm">Win Rate: <span id="resAcc" class="text-cyan-400 font-bold">--</span></p>
         </div>
-    </main>
+        <button onclick="location.reload()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold rounded-xl transition">NEW ANALYSIS</button>
+    </div>
+</div>
 
-    <footer class="text-center p-4 text-slate-600 text-xs font-orbitron">
-        MK SNIPER BOT v47.0 - POWERED BY QUANTUM ALGORITHMS
-    </footer>
-
-    <script>
-        let selectedMarket = '';
-        let selectedTime = '';
-
-        function selectMarket(market) {
-            selectedMarket = market;
-            document.getElementById('step-1').classList.add('hidden');
-            document.getElementById('step-2').classList.remove('hidden');
+<script>
+    async function analyze() {
+        document.getElementById('step-1').classList.add('hidden');
+        document.getElementById('loading').classList.remove('hidden');
+        
+        const logs = ["Connecting to OTC Data...", "Scanning Order Books...", "Finalizing Entry..."];
+        for (let l of logs) {
+            document.getElementById('logText').innerText = l;
+            await new Promise(r => setTimeout(r, 1000));
         }
 
-        function selectDuration(duration) {
-            selectedTime = duration;
-            document.getElementById('step-2').classList.add('hidden');
-            document.getElementById('step-3').classList.remove('hidden');
-        }
+        const data = { 
+            pair: document.getElementById('pair').value, 
+            duration: document.getElementById('duration').value 
+        };
 
-        async function fetchSignalWithRetry(data, retries = 3) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    let response = await fetch('/api/generate_signal', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    if (response.ok) return await response.json();
-                } catch (err) {
-                    await new Promise(r => setTimeout(r, 1000));
-                }
-            }
-            return { pair: data.pair, action: "CALL (BUY) 📈", accuracy: "96.8%", entry_time: "NOW" };
-        }
+        const res = await fetch('/api/generate_signal', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        });
+        const result = await res.json();
 
-        async function startAnalysis() {
-            document.getElementById('step-3').classList.add('hidden');
-            document.getElementById('step-4').classList.remove('hidden');
-
-            const logs = [
-                "Connecting to OTC Liquidity Pool...",
-                "Scanning Volatility & Order Book...",
-                "Calculating Quantum Win-Rate...",
-                "Finalizing Entry Window..."
-            ];
-
-            for (let log of logs) {
-                document.getElementById('consoleLog').innerText = log;
-                await new Promise(r => setTimeout(r, 600));
-            }
-
-            const chosenPair = document.getElementById('pairSelect').value;
-            const res = await fetchSignalWithRetry({ pair: chosenPair, duration: selectedTime });
-
-            document.getElementById('step-4').classList.add('hidden');
-            document.getElementById('step-5').classList.remove('hidden');
-
-            document.getElementById('pairResult').innerText = res.pair;
-            document.getElementById('actionResult').innerText = res.action;
-            document.getElementById('accuracyResult').innerText = res.accuracy;
-            document.getElementById('timeResult').innerText = res.entry_time;
-        }
-
-        function resetWizard() {
-            document.getElementById('step-5').classList.add('hidden');
-            document.getElementById('step-1').classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('result').classList.remove('hidden');
+        
+        document.getElementById('resPair').innerText = result.pair;
+        document.getElementById('resAction').innerText = result.action;
+        document.getElementById('resAcc').innerText = result.accuracy;
+    }
+</script>
+{% endblock %}
