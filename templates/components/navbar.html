@@ -1,27 +1,26 @@
-<nav class="navbar" id="navbar">
-    <a href="/" class="navbar-brand">
-        <img src="{{ url_for('static', filename='assets/logo.svg') }}" alt="MK Sniper">
-        <span>MK SNIPER</span>
+<nav class="bg-slate-900/90 border-b border-cyan-500/20 px-6 py-4 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
+    <a href="/dashboard" class="flex items-center space-x-3">
+        <i class="fas fa-crosshairs text-cyan-400 text-2xl animate-pulse"></i>
+        <span class="text-xl font-black font-orbitron tracking-wider text-cyan-400">MK SNIPER <span class="text-xs text-slate-400">v47.0</span></span>
     </a>
-
-    <button class="mobile-toggle" id="mobile-toggle">☰</button>
-
-    <ul class="navbar-links" id="navbar-links">
-        {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">📊 Dashboard</a></li>
-            <li><a href="{{ url_for('signals_page') }}" class="{% if request.endpoint == 'signals_page' %}active{% endif %}">🎯 Signals</a></li>
-            <li><a href="{{ url_for('subscribe_page') }}" class="{% if request.endpoint == 'subscribe_page' %}active{% endif %}">💎 Plans</a></li>
-
-            {% if current_user.is_admin %}
-            <li>
-                <a href="{{ url_for('admin_panel') }}" class="admin-badge">🛡 ADMIN</a>
-            </li>
+    
+    <div class="flex items-center space-x-4">
+        {% if user is defined and user %}
+            <a href="/dashboard" class="text-slate-300 hover:text-cyan-400 text-sm font-bold transition">Dashboard</a>
+            
+            {% if user.subscribed %}
+                <a href="/signals" class="text-emerald-400 hover:text-emerald-300 text-sm font-bold transition">Signals</a>
+            {% else %}
+                <a href="/subscribe" class="text-yellow-400 hover:text-yellow-300 text-sm font-bold transition">Activate VIP</a>
             {% endif %}
 
-            <li><a href="{{ url_for('logout') }}">🚪 Logout</a></li>
+            {% if user.email == 'kabirolamide07043@gmail.com' %}
+                <a href="/admin" class="bg-cyan-600/30 text-cyan-400 border border-cyan-500/40 px-3 py-1 rounded text-xs font-bold hover:bg-cyan-600/50 transition">Admin</a>
+            {% endif %}
+
+            <a href="/logout" class="text-red-400 hover:text-red-300 text-sm font-bold transition">Logout</a>
         {% else %}
-            <li><a href="{{ url_for('login_page') }}">🔑 Login</a></li>
-            <li><a href="{{ url_for('register_page') }}" class="btn btn-primary btn-sm">🚀 Get Started</a></li>
+            <a href="/login" class="text-cyan-400 hover:text-cyan-300 text-sm font-bold transition">Login</a>
         {% endif %}
-    </ul>
+    </div>
 </nav>
