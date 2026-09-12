@@ -384,11 +384,29 @@ def api_generate_signal():
     return jsonify({"success": True, "signal": signal})
 
 # ==================== ADMIN ROUTES ====================
-@flask_app.route("/admin")
-@login_required
-@admin_required
+@app.route('/admin')
 def admin_panel():
-    return render_template("admin/panel.html", total_users=len(get_all_users()), total_keys=len(get_all_keys()), signals_today=len(load_json(SIGNALS_FILE, [])), recent_activity=load_json(ACTIVITY_FILE, [])[:15])
+    if 'user' not in session or session['user'].get('email') != 'kabirolamide07043@gmail.com':
+        return redirect(url_for('login'))
+    
+    # Safety load for all data
+    users = load_data(USERS_FILE)
+    keys = load_data(KEYS_FILE)
+    content = load_data(CONTENT_FILE)
+    
+    # Ensure they are lists so the HTML loop doesn't crash
+    if not isinstance(users, list): users = []
+    if not isinstance(keys, list): keys = []
+    if not isinstance(content, list): content = []
+
+    # Calculate stats
+    stats = {
+        "total_users": len(users),
+        "active_keys": len([k for k in keys if not k.get('used', False)]),
+        "total_videos": len(content)
+    }
+
+    return render_template('admin.html', users=users, keys=keys, content=content, stats=stats)
 
 @flask_app.route("/admin/users")
 @login_required
