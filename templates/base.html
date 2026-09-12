@@ -3,36 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MK Sniper Bot{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='assets/logo.svg') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% block head %}{% endblock %}
+    <title>MK SNIPER BOT v47.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+        body { font-family: 'Rajdhani', sans-serif; background: #030712; color: #f3f4f6; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+    </style>
 </head>
-<body>
-    <div class="bg-animation"></div>
-    <div class="bg-grid"></div>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    {% include 'components/navbar.html' %}
+    {% include 'components/navbar.html' ignore missing %}
 
-    <div class="toast-container"></div>
+    <main class="flex-1 flex items-center justify-center p-4">
+        {% block content %}{% endblock %}
+    </main>
 
-    {% block content %}{% endblock %}
+    <footer class="py-4 text-center text-xs text-slate-600 font-orbitron border-t border-slate-900">
+        MK SNIPER BOT v47.0 &copy; 2026. ALL RIGHTS RESERVED.
+    </footer>
 
-    {% include 'components/footer.html' %}
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    {% block scripts %}{% endblock %}
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <script>
-        {% for category, message in messages %}
-        showToast("{{ message }}", "{{ category }}");
-        {% endfor %}
-    </script>
-    {% endif %}
-    {% endwith %}
 </body>
 </html>
