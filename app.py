@@ -12,18 +12,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Flask Configuration
 app = Flask(__name__)
 app.secret_key = 'mk_sniper_permanent_secret_key_07043'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
 
-# Database Files
 USERS_FILE = 'users.json'
 KEYS_FILE = 'access_keys.json'
 CONTENT_FILE = 'content.json'
 
-# Failsafe Safe Data Loader (Handles empty/corrupted files)
 def load_data(filepath):
     if not os.path.exists(filepath):
         return []
@@ -45,20 +42,25 @@ def save_data(filepath, data):
     except Exception as e:
         print(f"[ERROR] Error saving {filepath}: {e}")
 
-# Live Debugger (Displays exact error details on screen if a 500 happens)
+# Global Template Injector: Prevents UndefinedError in templates like navbar.html
+@app.context_processor
+def inject_user():
+    current_user = None
+    if 'user' in session:
+        users = load_data(USERS_FILE)
+        current_user = next((u for u in users if u.get('email') == session['user'].get('email')), session['user'])
+    return dict(user=current_user)
+
 @app.errorhandler(500)
 def internal_error(e):
     tb = traceback.format_exc()
-    print(f"[500 ERROR TRACEBACK]:\n{tb}")
     return f"""
     <div style="background:#090d16; color:#ff5555; padding:30px; font-family:monospace; border:2px solid #ff5555; border-radius:10px; margin:20px;">
         <h2>⚠️ MK SNIPER - SERVER ERROR DEBUGGER</h2>
-        <p style="color:#fff;"><b>Traceback Details:</b></p>
         <pre style="background:#000; padding:15px; border-radius:5px; overflow-x:auto; color:#4af626;">{tb}</pre>
     </div>
     """, 500
 
-# Automatic Admin Provisioning
 def sync_admin():
     admin_email = "kabirolamide07043@gmail.com"
     admin_password = os.environ.get("ADMIN_PASSWORD", "AdminPass123!")
@@ -82,7 +84,6 @@ sync_admin()
 def make_session_permanent():
     session.permanent = True
 
-# Telegram Bot Integration
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8890005372:AAHrbrMdHc6KqiyV30KoDNwPf5-IzcngQpQ")
 bot_started = False
 
@@ -153,7 +154,6 @@ def start_bot_thread():
         t = threading.Thread(target=run_tg_bot, daemon=True)
         t.start()
 
-# Web Routes
 @app.route('/')
 def index():
     if 'user' in session:
