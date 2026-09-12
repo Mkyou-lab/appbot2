@@ -1,163 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MK SNIPER BOT v47.0 - Admin Control Center</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
-        body { font-family: 'Rajdhani', sans-serif; background: #030712; color: #f3f4f6; }
-        .font-orbitron { font-family: 'Orbitron', sans-serif; }
-        .glow-box { box-shadow: 0 0 25px rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); }
-    </style>
-</head>
-<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+{% extends 'base.html' %}
+{% block content %}
+<div class="w-full max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-center border-b border-cyan-500/20 pb-4">
+        <h2 class="text-3xl font-black font-orbitron text-cyan-400">ADMIN CONTROLLER</h2>
+        <span class="bg-cyan-900 border border-cyan-500 px-3 py-1 rounded text-cyan-100 text-sm">Owner Mode: Active</span>
+    </div>
 
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-cyan-500/20 p-6 flex flex-col justify-between">
-        <div>
-            <div class="flex items-center space-x-3 mb-8">
-                <i class="fas fa-user-shield text-cyan-400 text-2xl"></i>
-                <h1 class="text-xl font-black font-orbitron tracking-wider text-cyan-400">MK ADMIN</h1>
-            </div>
-            <nav class="space-y-3">
-                <a href="/admin" class="flex items-center space-x-3 p-3 bg-cyan-950/50 text-cyan-400 border border-cyan-500/30 rounded-lg font-bold">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="/dashboard" class="flex items-center space-x-3 p-3 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition">
-                    <i class="fas fa-desktop"></i>
-                    <span>User Portal</span>
-                </a>
-                <a href="/signals" class="flex items-center space-x-3 p-3 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition">
-                    <i class="fas fa-crosshairs"></i>
-                    <span>Signal Engine</span>
-                </a>
-            </nav>
+    <!-- Generate Keys for Users -->
+    <div class="bg-slate-900 border border-emerald-500/30 p-6 rounded-xl">
+        <h3 class="text-xl font-bold font-orbitron text-emerald-400 mb-4">Generate VIP Access Keys</h3>
+        <p class="text-sm text-slate-400 mb-4">Create access keys to sell or give to users. When they enter the code, they get VIP access.</p>
+        <form action="/admin/generate_key" method="POST" class="flex gap-4">
+            <select name="duration" class="bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none">
+                <option value="1">1 Day Pass</option>
+                <option value="7">7 Days Weekly Pass</option>
+                <option value="30" selected>30 Days Monthly Pass</option>
+                <option value="365">1 Year Lifetime Pass</option>
+            </select>
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl font-orbitron transition">GENERATE NEW KEY</button>
+        </form>
+    </div>
+
+    <!-- User Management Table -->
+    <div class="bg-slate-900 border border-cyan-500/30 rounded-xl overflow-hidden">
+        <div class="p-4 bg-slate-800 border-b border-cyan-500/30 font-bold text-cyan-400">Registered Users ({{ stats.total_users }})</div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="bg-slate-950 text-slate-400">
+                        <th class="p-4">Username</th>
+                        <th class="p-4">Email</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 text-slate-200">
+                    {% for u in users %}
+                    <tr>
+                        <td class="p-4 font-bold">{{ u.username }}</td>
+                        <td class="p-4">{{ u.email }}</td>
+                        <td class="p-4">
+                            {% if u.subscribed %}<span class="text-emerald-400">VIP Active</span>
+                            {% else %}<span class="text-red-400">Free Tier</span>{% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if u.email != 'kabirolamide07043@gmail.com' %}
+                            <form action="/admin/delete_user" method="POST" onsubmit="return confirm('Delete this user?');">
+                                <input type="hidden" name="email" value="{{ u.email }}">
+                                <button class="text-red-500 hover:text-red-400 font-bold"><i class="fas fa-trash"></i></button>
+                            </form>
+                            {% else %}
+                            <span class="text-cyan-600 text-xs">OWNER</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <a href="/logout" class="flex items-center space-x-3 p-3 text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded-lg transition mt-6">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-        </a>
-    </aside>
+    </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
-        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-cyan-500/20 pb-6 gap-4">
-            <div>
-                <h2 class="text-3xl font-black font-orbitron text-white">SYSTEM CONTROLLER</h2>
-                <p class="text-slate-400 text-sm">Managing MK SNIPER BOT v47.0 Ecosystem</p>
-            </div>
-            <div class="bg-slate-900 border border-cyan-500/30 px-4 py-2 rounded-lg text-sm text-cyan-400 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                kabirolamide07043@gmail.com
-            </div>
-        </div>
-
-        <!-- Metrics Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div class="bg-slate-900/80 p-6 rounded-xl glow-box flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-bold uppercase">Total Users</p>
-                    <p class="text-3xl font-black font-orbitron text-cyan-400 mt-1">{{ stats.total_users }}</p>
-                </div>
-                <i class="fas fa-users text-cyan-500/30 text-4xl"></i>
-            </div>
-            <div class="bg-slate-900/80 p-6 rounded-xl glow-box flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-bold uppercase">Active Keys</p>
-                    <p class="text-3xl font-black font-orbitron text-emerald-400 mt-1">{{ stats.active_keys }}</p>
-                </div>
-                <i class="fas fa-key text-emerald-500/30 text-4xl"></i>
-            </div>
-            <div class="bg-slate-900/80 p-6 rounded-xl glow-box flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-bold uppercase">Videos Published</p>
-                    <p class="text-3xl font-black font-orbitron text-purple-400 mt-1">{{ stats.total_videos }}</p>
-                </div>
-                <i class="fas fa-video text-purple-500/30 text-4xl"></i>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-slate-900/90 p-6 rounded-xl border border-cyan-500/30 glow-box space-y-4">
-                <h3 class="text-xl font-bold font-orbitron text-cyan-400 flex items-center gap-2">
-                    <i class="fas fa-key"></i> Generate VIP Access Key
-                </h3>
-                <form action="/admin/generate_key" method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-slate-400 mb-1">Pass Duration</label>
-                        <select name="duration" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none">
-                            <option value="1">1 Day Pass</option>
-                            <option value="7">7 Days Pass</option>
-                            <option value="30" selected>30 Days Pass</option>
-                            <option value="365">1 Year Lifetime Access</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 rounded-lg font-orbitron hover:from-cyan-500 hover:to-blue-500 transition">
-                        GENERATE MK-KEY
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-slate-900/90 p-6 rounded-xl border border-purple-500/30 glow-box space-y-4">
-                <h3 class="text-xl font-bold font-orbitron text-purple-400 flex items-center gap-2">
-                    <i class="fas fa-film"></i> Upload Strategy / Video Link
-                </h3>
-                <form action="/admin/add_content" method="POST" class="space-y-4">
-                    <input type="text" name="title" placeholder="Strategy Title" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none">
-                    <input type="url" name="url" placeholder="YouTube or MP4 Direct URL" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none">
-                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-lg font-orbitron hover:from-purple-500 hover:to-indigo-500 transition">
-                        PUBLISH CONTENT
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Registered Users -->
-        <div class="bg-slate-900/90 rounded-xl border border-cyan-500/30 glow-box overflow-hidden">
-            <div class="p-6 border-b border-slate-800">
-                <h3 class="text-xl font-bold font-orbitron text-cyan-400">Users Directory</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-950 text-cyan-400 text-sm font-orbitron uppercase border-b border-slate-800">
-                            <th class="p-4">User</th>
-                            <th class="p-4">Email</th>
-                            <th class="p-4">Telegram ID</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4">Action</th>
+    <!-- Active Keys Table -->
+    <div class="bg-slate-900 border border-purple-500/30 rounded-xl overflow-hidden">
+        <div class="p-4 bg-slate-800 border-b border-purple-500/30 font-bold text-purple-400">Unused Access Keys ({{ stats.active_keys }})</div>
+        <div class="p-4 text-sm text-slate-400">Copy these codes and send them to your subscribers.</div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <tbody class="divide-y divide-slate-800 text-slate-200">
+                    {% for k in keys %}
+                        {% if not k.used %}
+                        <tr>
+                            <td class="p-4 font-mono text-purple-400 font-bold text-lg">{{ k.key }}</td>
+                            <td class="p-4">{{ k.duration }} Days Access</td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800 text-sm">
-                        {% for u in users %}
-                        <tr class="hover:bg-slate-800/50 transition">
-                            <td class="p-4 font-bold text-white">{{ u.username }}</td>
-                            <td class="p-4 text-slate-400">{{ u.email }}</td>
-                            <td class="p-4 text-slate-400">{{ u.telegram_id or 'Unlinked' }}</td>
-                            <td class="p-4">
-                                {% if u.subscribed %}
-                                <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold">SUBSCRIBED</span>
-                                {% else %}
-                                <span class="px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/30 rounded-full text-xs font-bold">EXPIRED</span>
-                                {% endif %}
-                            </td>
-                            <td class="p-4">
-                                <form action="/admin/delete_user" method="POST" onsubmit="return confirm('Delete user?');">
-                                    <input type="hidden" name="email" value="{{ u.email }}">
-                                    <button type="submit" class="text-red-400 hover:text-red-300 p-2"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+</div>
+{% endblock %}
