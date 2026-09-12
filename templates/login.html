@@ -1,83 +1,49 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="w-full max-w-md bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-8 shadow-2xl shadow-cyan-500/10">
-    
     <div class="text-center mb-8">
         <h1 class="text-3xl font-black font-orbitron text-cyan-400">MK SNIPER BOT</h1>
         <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-orbitron">Precision Terminal v47.0</p>
     </div>
-
-    {% if error is defined and error %}
+    {% if error %}
     <div class="mb-6 p-4 bg-red-500/10 border border-red-500/40 rounded-xl text-red-400 text-sm font-bold text-center">
-        <i class="fas fa-exclamation-triangle mr-2"></i> {{ error }}
+        {{ error }}
     </div>
     {% endif %}
-
-    <!-- Navigation Tabs -->
     <div class="flex border-b border-slate-800 mb-6">
         <button id="loginTabBtn" onclick="showForm('login')" class="w-1/2 py-2 font-orbitron text-cyan-400 border-b-2 border-cyan-400 font-bold text-sm">LOGIN</button>
         <button id="regTabBtn" onclick="showForm('register')" class="w-1/2 py-2 font-orbitron text-slate-500 border-b-2 border-transparent font-bold text-sm hover:text-slate-300">REGISTER</button>
     </div>
-
+    
     <!-- Login Form -->
     <form id="loginForm" action="/login" method="POST" class="space-y-5">
-        <div>
-            <label class="block text-xs font-orbitron text-slate-400 mb-1">EMAIL ADDRESS</label>
-            <input type="email" name="email" required placeholder="trader@mksniper.com"
-                   class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
-        </div>
-        <div>
-            <label class="block text-xs font-orbitron text-slate-400 mb-1">PASSWORD</label>
-            <input type="password" name="password" required placeholder="••••••••"
-                   class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
-        </div>
-        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black font-orbitron rounded-xl transition shadow-lg shadow-cyan-500/20">
-            ACCESS SYSTEM
-        </button>
+        <input type="email" name="email" required placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
+        <input type="password" name="password" required placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
+        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black font-orbitron rounded-xl transition shadow-lg shadow-cyan-500/20">ACCESS SYSTEM</button>
     </form>
-
+    
     <!-- Register Form -->
     <form id="regForm" action="/register" method="POST" class="hidden space-y-5">
-        <div>
-            <label class="block text-xs font-orbitron text-slate-400 mb-1">USERNAME</label>
-            <input type="text" name="username" required placeholder="TraderPro"
-                   class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
-        </div>
-        <div>
-            <label class="block text-xs font-orbitron text-slate-400 mb-1">EMAIL ADDRESS</label>
-            <input type="email" name="email" required placeholder="trader@mksniper.com"
-                   class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
-        </div>
-        <div>
-            <label class="block text-xs font-orbitron text-slate-400 mb-1">CREATE PASSWORD</label>
-            <input type="password" name="password" required placeholder="••••••••"
-                   class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
-        </div>
-        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black font-orbitron rounded-xl transition shadow-lg shadow-emerald-500/20">
-            CREATE ACCOUNT
-        </button>
+        <input type="text" name="username" required placeholder="Username" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
+        <input type="email" name="email" required placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
+        <input type="password" name="password" required placeholder="Create Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-500 outline-none transition text-sm">
+        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black font-orbitron rounded-xl transition shadow-lg shadow-emerald-500/20">CREATE ACCOUNT</button>
     </form>
-
 </div>
-
 <script>
     function showForm(type) {
-        const loginForm = document.getElementById('loginForm');
-        const regForm = document.getElementById('regForm');
-        const loginBtn = document.getElementById('loginTabBtn');
-        const regBtn = document.getElementById('regTabBtn');
-
+        const login = document.getElementById('loginForm');
+        const reg = document.getElementById('regForm');
+        const lBtn = document.getElementById('loginTabBtn');
+        const rBtn = document.getElementById('regTabBtn');
         if (type === 'login') {
-            loginForm.classList.remove('hidden');
-            regForm.classList.add('hidden');
-            loginBtn.className = "w-1/2 py-2 font-orbitron text-cyan-400 border-b-2 border-cyan-400 font-bold text-sm";
-            regBtn.className = "w-1/2 py-2 font-orbitron text-slate-500 border-b-2 border-transparent font-bold text-sm hover:text-slate-300";
+            login.classList.remove('hidden'); reg.classList.add('hidden');
+            lBtn.className = "w-1/2 py-2 font-orbitron text-cyan-400 border-b-2 border-cyan-400 font-bold text-sm";
+            rBtn.className = "w-1/2 py-2 font-orbitron text-slate-500 border-b-2 border-transparent font-bold text-sm hover:text-slate-300";
         } else {
-            loginForm.classList.add('hidden');
-            regForm.classList.remove('hidden');
-            regBtn.className = "w-1/2 py-2 font-orbitron text-emerald-400 border-b-2 border-emerald-400 font-bold text-sm";
-            loginBtn.className = "w-1/2 py-2 font-orbitron text-slate-500 border-b-2 border-transparent font-bold text-sm hover:text-slate-300";
+            login.classList.add('hidden'); reg.classList.remove('hidden');
+            rBtn.className = "w-1/2 py-2 font-orbitron text-emerald-400 border-b-2 border-emerald-400 font-bold text-sm";
+            lBtn.className = "w-1/2 py-2 font-orbitron text-slate-500 border-b-2 border-transparent font-bold text-sm hover:text-slate-300";
         }
     }
 </script>
