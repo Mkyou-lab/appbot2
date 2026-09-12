@@ -1,81 +1,125 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard — MK Sniper Bot{% endblock %}
 
 {% block content %}
-<div class="main-content">
-    <div class="container">
-        <!-- Header -->
-        <div class="dashboard-header mb-4">
-            <div>
-                <h1>Welcome, <span style="color: var(--accent-green)">{{ current_user.fullname }}</span> 👋</h1>
-                <p class="welcome-text">Your Telegram ID: <code style="color: var(--accent-blue)">{{ current_user.telegram_id or 'Not Linked' }}</code></p>
+<div class="w-full max-w-5xl mx-auto space-y-8 py-6">
+
+    <!-- Top Welcome Banner -->
+    <div class="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl shadow-cyan-500/5">
+        <div>
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-black font-orbitron text-white">
+                    WELCOME, <span class="text-cyan-400">{{ (user.username if user else 'TRADER') | upper }}</span> 👋
+                </h1>
             </div>
-            <div class="d-flex align-center gap-2">
-                <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
-            </div>
+            <p class="text-slate-400 text-sm mt-1">MK SNIPER BOT v47.0 - Quantum Market Terminal</p>
         </div>
 
-        <div class="stats-grid mb-4">
-            <div class="stat-card pink">
-                <div class="card-icon pink">💎</div>
-                <div class="stat-info">
-                    <div class="stat-label">Subscription</div>
-                    <div class="stat-value pink">{{ sub_status }}</div>
-                    {% if sub_days %}<div class="stat-change">{{ sub_days }} days left</div>{% endif %}
+        <!-- Subscription Status Badge -->
+        <div class="flex items-center gap-4">
+            {% if user and user.subscribed %}
+                <div class="bg-emerald-950/80 border border-emerald-500/50 px-4 py-2 rounded-xl text-right">
+                    <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider">VIP ACCESS ACTIVE</div>
+                    <div class="text-xs text-slate-400">Expires: {{ user.expiry_date or 'Lifetime' }}</div>
                 </div>
-            </div>
-            <div class="stat-card green">
-                <div class="card-icon green">🎯</div>
-                <div class="stat-info">
-                    <div class="stat-label">Web + Telegram</div>
-                    <div class="stat-value green">SYNCED</div>
+                <a href="/signals" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black font-orbitron px-6 py-3 rounded-xl transition shadow-lg shadow-cyan-500/20">
+                    <i class="fas fa-crosshairs mr-2"></i> LAUNCH SIGNALS
+                </a>
+            {% else %}
+                <div class="bg-red-950/80 border border-red-500/50 px-4 py-2 rounded-xl text-right">
+                    <div class="text-xs text-red-400 font-bold uppercase tracking-wider">NO ACTIVE VIP PASS</div>
+                    <div class="text-xs text-slate-400">Key Required</div>
                 </div>
-            </div>
+                <a href="/subscribe" class="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-black font-orbitron px-6 py-3 rounded-xl transition shadow-lg shadow-yellow-500/20">
+                    <i class="fas fa-key mr-2"></i> GET ACCESS KEY
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Redeem Key Card (If not subscribed) -->
+    {% if user and not user.subscribed %}
+    <div class="bg-slate-900/90 border border-yellow-500/30 rounded-2xl p-6 shadow-lg shadow-yellow-500/5">
+        <h3 class="text-lg font-bold font-orbitron text-yellow-400 mb-2 flex items-center gap-2">
+            <i class="fas fa-unlock"></i> REDEEM VIP SUBSCRIPTION KEY
+        </h3>
+        <p class="text-slate-400 text-sm mb-4">Enter your key below to unlock signal generation on both Web & Telegram instantly.</p>
+        
+        <div class="flex flex-col sm:flex-row gap-3">
+            <input type="text" id="keyInput" placeholder="MK-XXXXXX" 
+                   class="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-3.5 text-white font-mono uppercase focus:border-yellow-500 outline-none">
+            <button onclick="redeemKey()" class="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black font-orbitron px-8 py-3.5 rounded-xl transition">
+                ACTIVATE NOW
+            </button>
+        </div>
+        <div id="keyMsg" class="mt-3 text-sm font-bold hidden"></div>
+    </div>
+    {% endif %}
+
+    <!-- Video Strategies / Educational Content -->
+    <div class="space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h2 class="text-xl font-bold font-orbitron text-cyan-400 flex items-center gap-2">
+                <i class="fas fa-play-circle"></i> STRATEGY & EDUCATIONAL MEDIA
+            </h2>
+            <span class="text-xs text-slate-500 font-orbitron">{{ content|length if content else 0 }} VIDEOS AVAILABLE</span>
         </div>
 
-        <!-- Strategy & Video Content -->
-        {% if content_items %}
-        <div class="card mb-4">
-            <div class="card-header"><span class="card-title">🎓 Education & Strategy</span></div>
-            <div class="content-grid">
-                {% for item in content_items %}
-                <div class="content-card">
-                    {% if item.url %}
-                        <div class="content-thumbnail" style="padding:0; background: #000;">
-                            {% if '.mp4' in item.url %}
-                                <video src="{{ item.url }}" controls style="width:100%; height:100%;"></video>
-                            {% else %}
-                                <iframe src="{{ item.url }}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        <div class="content-thumbnail">📄</div>
-                    {% endif %}
-                    <div class="content-body">
-                        <h3>{{ item.title }}</h3>
-                        <p>{{ item.description }}</p>
+        {% if content %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for item in content %}
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <h3 class="font-bold text-white text-base font-orbitron flex items-center gap-2">
+                        <i class="fas fa-video text-cyan-400"></i> {{ item.title }}
+                    </h3>
+                    <div class="aspect-video w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                        {% if 'youtube' in item.url or 'embed' in item.url %}
+                            <iframe src="{{ item.url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                        {% else %}
+                            <video src="{{ item.url }}" controls class="w-full h-full"></video>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        {% else %}
+            <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-8 text-center text-slate-500">
+                <i class="fas fa-film text-3xl mb-2 text-slate-700"></i>
+                <p>No strategy videos uploaded yet. Check back soon!</p>
+            </div>
         {% endif %}
-
-        <!-- Quick Actions -->
-        <div class="stats-grid mb-4">
-            <a href="{{ url_for('signals_page') }}" class="card" style="text-decoration: none;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2rem;">🎯</span>
-                    <div><h3 style="color: var(--text-primary);">Sniper Engine</h3><p style="color: var(--text-muted); font-size: 0.85rem;">Generate a signal</p></div>
-                </div>
-            </a>
-            <a href="https://t.me/{{ config.get('ADMIN_USERNAME','').replace('@','') }}" target="_blank" class="card" style="text-decoration: none;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-size: 2rem;">📱</span>
-                    <div><h3 style="color: var(--text-primary);">Telegram Support</h3><p style="color: var(--text-muted); font-size: 0.85rem;">Contact Admin</p></div>
-                </div>
-            </a>
-        </div>
     </div>
+
 </div>
+
+<script>
+    async function redeemKey() {
+        const key = document.getElementById('keyInput').value.trim();
+        const msg = document.getElementById('keyMsg');
+        if (!key) return;
+
+        msg.classList.remove('hidden', 'text-emerald-400', 'text-red-400');
+        msg.innerText = "Validating key...";
+
+        try {
+            const res = await fetch('/api/redeem_key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                msg.classList.add('text-emerald-400');
+                msg.innerText = "✅ " + data.message + " Reloading...";
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                msg.classList.add('text-red-400');
+                msg.innerText = "❌ " + data.message;
+            }
+        } catch (e) {
+            msg.classList.add('text-red-400');
+            msg.innerText = "❌ Network error. Try again.";
+        }
+    }
+</script>
 {% endblock %}
