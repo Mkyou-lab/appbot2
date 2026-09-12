@@ -1,79 +1,92 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="w-full max-w-6xl mx-auto space-y-8">
-    <div class="flex justify-between items-center border-b border-cyan-500/20 pb-4">
+<div class="w-full max-w-7xl mx-auto space-y-8 py-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-cyan-500/20 pb-4 gap-4">
         <h2 class="text-3xl font-black font-orbitron text-cyan-400">ADMIN CONTROLLER</h2>
-        <span class="bg-cyan-900 border border-cyan-500 px-3 py-1 rounded text-cyan-100 text-sm">Owner Mode: Active</span>
+        <span class="bg-cyan-900 border border-cyan-500 px-3 py-1 rounded text-cyan-100 text-sm font-bold shadow-lg shadow-cyan-500/20"><i class="fas fa-crown"></i> Owner Mode</span>
     </div>
 
-    <!-- Generate Keys for Users -->
-    <div class="bg-slate-900 border border-emerald-500/30 p-6 rounded-xl">
-        <h3 class="text-xl font-bold font-orbitron text-emerald-400 mb-4">Generate VIP Access Keys</h3>
-        <p class="text-sm text-slate-400 mb-4">Create access keys to sell or give to users. When they enter the code, they get VIP access.</p>
-        <form action="/admin/generate_key" method="POST" class="flex gap-4">
-            <select name="duration" class="bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none">
-                <option value="1">1 Day Pass</option>
-                <option value="7">7 Days Weekly Pass</option>
-                <option value="30" selected>30 Days Monthly Pass</option>
-                <option value="365">1 Year Lifetime Pass</option>
-            </select>
-            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl font-orbitron transition">GENERATE NEW KEY</button>
-        </form>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Mass Key Generator -->
+        <div class="bg-slate-900 border border-emerald-500/30 p-6 rounded-xl shadow-xl shadow-emerald-500/5">
+            <h3 class="text-xl font-bold font-orbitron text-emerald-400 mb-2">Create Keys (For Telegram / Manual Handout)</h3>
+            <form action="/admin/generate_key" method="POST" class="flex flex-col sm:flex-row gap-4 mt-4">
+                <select name="duration" class="flex-1 bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none">
+                    <option value="1">1 Day</option><option value="7">7 Days</option>
+                    <option value="30" selected>30 Days</option><option value="365">1 Year</option>
+                </select>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl font-orbitron transition shadow-lg shadow-emerald-500/20">CREATE KEY</button>
+            </form>
+        </div>
+
+        <!-- Active Keys List -->
+        <div class="bg-slate-900 border border-purple-500/30 p-6 rounded-xl shadow-xl shadow-purple-500/5 overflow-y-auto max-h-48">
+            <h3 class="text-xl font-bold font-orbitron text-purple-400 mb-2 border-b border-purple-500/20 pb-2">Unused Access Keys</h3>
+            <div class="space-y-2 mt-3">
+                {% for k in keys %}
+                    {% if not k.used %}
+                    <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                        <span class="font-mono text-purple-400 font-bold tracking-wider">{{ k.key }}</span>
+                        <span class="text-xs text-slate-400">{{ k.duration }} Days</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
-    <!-- User Management Table -->
-    <div class="bg-slate-900 border border-cyan-500/30 rounded-xl overflow-hidden">
-        <div class="p-4 bg-slate-800 border-b border-cyan-500/30 font-bold text-cyan-400">Registered Users ({{ stats.total_users }})</div>
+    <!-- Specific User Management & Upgrades -->
+    <div class="bg-slate-900 border border-cyan-500/30 rounded-xl overflow-hidden shadow-xl shadow-cyan-500/5">
+        <div class="p-4 bg-slate-800 border-b border-cyan-500/30 font-bold text-cyan-400 text-lg font-orbitron">Manage Registered Users</div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead>
-                    <tr class="bg-slate-950 text-slate-400">
-                        <th class="p-4">Username</th>
-                        <th class="p-4">Email</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4">Actions</th>
+                    <tr class="bg-slate-950 text-slate-400 uppercase text-xs font-orbitron tracking-wider">
+                        <th class="p-4">User Info</th>
+                        <th class="p-4">Status / Expiry</th>
+                        <th class="p-4">Direct Action (Upgrade)</th>
+                        <th class="p-4">Remove</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800 text-slate-200">
                     {% for u in users %}
-                    <tr>
-                        <td class="p-4 font-bold">{{ u.username }}</td>
-                        <td class="p-4">{{ u.email }}</td>
+                    <tr class="hover:bg-slate-800/30 transition">
                         <td class="p-4">
-                            {% if u.subscribed %}<span class="text-emerald-400">VIP Active</span>
-                            {% else %}<span class="text-red-400">Free Tier</span>{% endif %}
+                            <div class="font-bold text-white text-base">{{ u.username }}</div>
+                            <div class="text-slate-400 text-xs">{{ u.email }}</div>
+                        </td>
+                        <td class="p-4">
+                            {% if u.subscribed %}
+                                <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold">VIP Active</span>
+                                <div class="text-xs text-slate-500 mt-1">{{ u.expiry_date }}</div>
+                            {% else %}
+                                <span class="px-2 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded text-xs font-bold">Free User</span>
+                            {% endif %}
                         </td>
                         <td class="p-4">
                             {% if u.email != 'kabirolamide07043@gmail.com' %}
-                            <form action="/admin/delete_user" method="POST" onsubmit="return confirm('Delete this user?');">
+                            <form action="/admin/upgrade_user" method="POST" class="flex gap-2">
                                 <input type="hidden" name="email" value="{{ u.email }}">
-                                <button class="text-red-500 hover:text-red-400 font-bold"><i class="fas fa-trash"></i></button>
+                                <select name="duration" class="bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white outline-none">
+                                    <option value="7">7 Days</option>
+                                    <option value="30" selected>30 Days</option>
+                                    <option value="365">1 Year</option>
+                                </select>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-3 py-2 rounded text-xs font-bold text-white transition">UPGRADE</button>
                             </form>
                             {% else %}
-                            <span class="text-cyan-600 text-xs">OWNER</span>
+                                <span class="text-cyan-600 text-xs font-bold">SYSTEM OWNER</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if u.email != 'kabirolamide07043@gmail.com' %}
+                            <form action="/admin/delete_user" method="POST" onsubmit="return confirm('Delete this user completely?');">
+                                <input type="hidden" name="email" value="{{ u.email }}">
+                                <button class="text-red-500 hover:text-red-400 p-2"><i class="fas fa-trash"></i></button>
+                            </form>
                             {% endif %}
                         </td>
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Active Keys Table -->
-    <div class="bg-slate-900 border border-purple-500/30 rounded-xl overflow-hidden">
-        <div class="p-4 bg-slate-800 border-b border-purple-500/30 font-bold text-purple-400">Unused Access Keys ({{ stats.active_keys }})</div>
-        <div class="p-4 text-sm text-slate-400">Copy these codes and send them to your subscribers.</div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <tbody class="divide-y divide-slate-800 text-slate-200">
-                    {% for k in keys %}
-                        {% if not k.used %}
-                        <tr>
-                            <td class="p-4 font-mono text-purple-400 font-bold text-lg">{{ k.key }}</td>
-                            <td class="p-4">{{ k.duration }} Days Access</td>
-                        </tr>
-                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
