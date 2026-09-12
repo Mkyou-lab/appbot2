@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MK SNIPER BOT v47.0 - Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+        body { font-family: 'Rajdhani', sans-serif; background: #030712; color: #f3f4f6; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .glow-box { box-shadow: 0 0 25px rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .glow-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.6); }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-cyan-500/20 p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center space-x-3 mb-8">
+                <i class="fas fa-user-shield text-cyan-400 text-2xl"></i>
+                <h1 class="text-xl font-black font-orbitron tracking-wider text-cyan-400">MK ADMIN</h1>
+            </div>
+            <nav class="space-y-3">
+                <a href="/admin" class="flex items-center space-x-3 p-3 bg-cyan-950/50 text-cyan-400 border border-cyan-500/30 rounded-lg font-bold">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/dashboard" class="flex items-center space-x-3 p-3 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition">
+                    <i class="fas fa-desktop"></i>
+                    <span>User Dashboard</span>
+                </a>
+                <a href="/signals" class="flex items-center space-x-3 p-3 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Signal Wizard</span>
+                </a>
+            </nav>
+        </div>
+        <a href="/logout" class="flex items-center space-x-3 p-3 text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded-lg transition mt-6">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-cyan-500/20 pb-6 gap-4">
+            <div>
+                <h2 class="text-3xl font-black font-orbitron text-white">SYSTEM CONTROLLER</h2>
+                <p class="text-slate-400 text-sm">Managing MK SNIPER BOT v47.0 Ecosystem</p>
+            </div>
+            <div class="bg-slate-900 border border-cyan-500/30 px-4 py-2 rounded-lg text-sm text-cyan-400 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Admin Logged In: kabirolamide07043@gmail.com
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-slate-900/80 p-6 rounded-xl glow-box flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Registered Users</p>
+                    <p class="text-3xl font-black font-orbitron text-cyan-400 mt-1">{{ stats.total_users if stats else (users|length if users else 0) }}</p>
+                </div>
+                <i class="fas fa-users text-cyan-500/30 text-4xl"></i>
+            </div>
+            <div class="bg-slate-900/80 p-6 rounded-xl glow-box flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Active Subscription Keys</p>
+                    <p class="text-3xl font-black font-orbitron text-emerald-400 mt-1">{{ stats.active_keys if stats else (keys|length if keys else 0) }}</p>
+                </div>
+                <i class="fas fa-key text-emerald-500/30 text-4xl"></i>
+            </div>
+            <div class="bg-slate-900/80 p-6 rounded-xl glow-box flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Educational Videos</p>
+                    <p class="text-3xl font-black font-orbitron text-purple-400 mt-1">{{ stats.total_videos if stats else (content|length if content else 0) }}</p>
+                </div>
+                <i class="fas fa-video text-purple-500/30 text-4xl"></i>
+            </div>
+        </div>
+
+        <!-- Action Grid: Key Generation & Strategy Media -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Generate VIP Access Keys -->
+            <div class="bg-slate-900/90 p-6 rounded-xl border border-cyan-500/30 glow-box space-y-4">
+                <h3 class="text-xl font-bold font-orbitron text-cyan-400 flex items-center gap-2">
+                    <i class="fas fa-key"></i> Generate Subscription Key
+                </h3>
+                <form action="/admin/generate_key" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Select Duration</label>
+                        <select name="duration" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none">
+                            <option value="1">1 Day Test Access</option>
+                            <option value="7">7 Days Weekly Pass</option>
+                            <option value="30" selected>30 Days Monthly Pass</option>
+                            <option value="365">1 Year Lifetime Access</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-lg font-orbitron transition shadow-lg shadow-cyan-500/20">
+                        GENERATE MK KEY
+                    </button>
+                </form>
+            </div>
+
+            <!-- Upload Video Strategy URL -->
+            <div class="bg-slate-900/90 p-6 rounded-xl border border-purple-500/30 glow-box space-y-4">
+                <h3 class="text-xl font-bold font-orbitron text-purple-400 flex items-center gap-2">
+                    <i class="fas fa-film"></i> Add Educational Content / Video
+                </h3>
+                <form action="/admin/add_content" method="POST" class="space-y-4">
+                    <div>
+                        <input type="text" name="title" placeholder="Strategy Title (e.g. OTC Volatility Masterclass)" required
+                               class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-purple-500 outline-none mb-3">
+                        <input type="url" name="url" placeholder="YouTube or Video Embed URL" required
+                               class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-purple-500 outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 rounded-lg font-orbitron transition shadow-lg shadow-purple-500/20">
+                        PUBLISH TO DASHBOARD
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- Users Management Table -->
+        <div class="bg-slate-900/90 rounded-xl border border-cyan-500/30 glow-box overflow-hidden">
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-xl font-bold font-orbitron text-cyan-400">User Accounts</h3>
+                <span class="text-xs text-slate-400">Auto-synced with Telegram Bot</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950 text-cyan-400 text-sm font-orbitron uppercase border-b border-slate-800">
+                            <th class="p-4">User</th>
+                            <th class="p-4">Email</th>
+                            <th class="p-4">Telegram ID</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-sm">
+                        {% if users %}
+                            {% for u in users %}
+                            <tr class="hover:bg-slate-800/50 transition">
+                                <td class="p-4 font-bold text-white">{{ u.username or 'N/A' }}</td>
+                                <td class="p-4 text-slate-400">{{ u.email or 'N/A' }}</td>
+                                <td class="p-4 text-slate-400">{{ u.telegram_id or 'Not Linked' }}</td>
+                                <td class="p-4">
+                                    {% if u.subscribed or u.subscription_active %}
+                                    <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold">SUBSCRIBED</span>
+                                    {% else %}
+                                    <span class="px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/30 rounded-full text-xs font-bold">EXPIRED</span>
+                                    {% endif %}
+                                </td>
+                                <td class="p-4">
+                                    <form action="/admin/delete_user" method="POST" onsubmit="return confirm('Delete user {{ u.email }}?');">
+                                        <input type="hidden" name="email" value="{{ u.email }}">
+                                        <button type="submit" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded transition">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="p-6 text-center text-slate-500">No registered users found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
